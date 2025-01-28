@@ -8,12 +8,13 @@ import { Header } from "@/components/header"
 import { CalendarWidget } from "@/components/calendar-widget"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { User } from '@/types';
-import { formatDate, getCookie } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { API } from '@/lib/axios';
 import { setUserData } from '@/store/userSlice';
 import Cookies from 'js-cookie';
+import LoadingSpinner from '@/components/spinner';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return <div>Loading...</div>
+    return <LoadingSpinner/>
   }
 
   const getUser = async (token: string) => {

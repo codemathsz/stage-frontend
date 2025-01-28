@@ -15,6 +15,7 @@ import { createVersion } from "@/api/version-api"
 import { createPhase } from "@/api/phase-api"
 import isEqual from 'lodash/isEqual';
 import { ChevronLeft } from "lucide-react"
+import LoadingSpinner from "@/components/spinner"
 
 interface IVersion{
   id: string
@@ -180,7 +181,7 @@ const Project = () => {
   }
 
   if (!project || !currentVersion) {
-    return <div>Loading...</div>
+    return <LoadingSpinner />
   }
   const hasChanges = !isEqual(project, initialProject);
   

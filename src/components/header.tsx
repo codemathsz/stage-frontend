@@ -3,7 +3,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from "@/context/AuthContext"
 import { User } from "@/types"
 import { Menu } from "lucide-react"
-import { useNavigate } from "react-router-dom"
 
 interface HeaderProps {
   user: User
