@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/context/AuthContext"
 import { User } from "@/types"
 import { Menu } from "lucide-react"
 import { useNavigate } from "react-router-dom"
@@ -9,10 +10,10 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
-  const navigate = useNavigate();
+  const {logout} = useAuth();
 
   const handleLogout = () => {
-    navigate('/');
+    logout();
   };
   
   return (
@@ -28,9 +29,6 @@ export function Header({ user }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Dashboard</DropdownMenuItem>
-              <DropdownMenuItem>Projects</DropdownMenuItem>
-              <DropdownMenuItem>Calendar</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
