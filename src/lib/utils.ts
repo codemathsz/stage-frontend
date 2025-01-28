@@ -9,27 +9,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function setCookie(name: String, value: String, days: number) {
-  let expires = "";
-  if (days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    expires = "; expires=" + date.toUTCString();
-  }
-  document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
-export function getCookie(name: String) {
-  const nameEQ = name + "=";
-  const ca = window.document?.cookie.split(';');
-  for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-  }
-  return null;
-}
-
 export async function getSession(token: string):Promise<User | null> { 
   if (!token) { 
     return null; 
@@ -55,8 +34,6 @@ export const formatDateISO = (dateString: string | undefined): string => {
   const isoString = date.toISOString();
   return isoString.split('T')[0];
 };
-
-
 
 export const mockProject: Project = {
   id: "",
