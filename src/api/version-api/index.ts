@@ -1,9 +1,9 @@
 import { API } from "@/lib/axios";
-import { getCookie } from "@/lib/utils";
 import { ProjectVersion } from "@/types";
+import Cookies from "js-cookie";
 
 export const createVersion = async (version: ProjectVersion): Promise<ProjectVersion> =>{
-  const token = getCookie('auth-token')
+  const token = Cookies.get('token');
 
   const response = await API.post('/api/project/version', version, {
     headers: { 
