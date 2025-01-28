@@ -24,9 +24,14 @@ export async function getSession(token: string):Promise<User | null> {
 }
 
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)}`
-}
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  });
+};
 
 export const formatDateISO = (dateString: string | undefined): string => {
   if (!dateString) return '';
