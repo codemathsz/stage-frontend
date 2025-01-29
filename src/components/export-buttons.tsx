@@ -10,7 +10,7 @@ interface ExportButtonsProps {
 export function ExportButtons({ projectVersion }: ExportButtonsProps) {
   const [isExporting, setIsExporting] = useState(false)
 
-  const handleExportCSV = async () => {
+  const handleExportCSV = () => {
     setIsExporting(true)
     try {
       let csvContent = "data:text/csv;charset=utf-8,"

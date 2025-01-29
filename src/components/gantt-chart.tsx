@@ -79,8 +79,6 @@ export function GanttChart({ projectVersion }: GanttChartProps) {
     // Initialize currentWeek and currentDate
     let currentWeek = 0
     const currentDate = new Date(projectVersion.startDate);
-    currentDate.setDate(currentDate.getDate() + 1);
-
 
     // Draw month divisions and labels
     ctx.fillStyle = "#374151"

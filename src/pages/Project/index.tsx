@@ -10,7 +10,7 @@ import { useSelector } from "react-redux"
 import { RootState } from "@/store/store"
 import { GanttChart } from "@/components/gantt-chart"
 import { ExportButtons } from "@/components/export-buttons"
-import { createProject, getProjectById, getProjectByUserId } from "@/api/project-api"
+import { createProject, getProjectById } from "@/api/project-api"
 import { createVersion } from "@/api/version-api"
 import { createPhase } from "@/api/phase-api"
 import isEqual from 'lodash/isEqual';
@@ -48,27 +48,25 @@ const Project = () => {
     const getProject = async () =>{
       if(id){
         const response = await handleProjectById(id)
-        setProject(response)
-        setInitialProject(response)
-        const latestVersion = findLatestVersion(response.versions)
-        setCurrentVersion(latestVersion)
-        setSelectedVersion(latestVersion)
-        setVersions(handleSetVersion(response.versions))
+        handleUpdatedData(response)
       }else{
-        const latestVersion = findLatestVersion(mockProject.versions)
         if(user?.id){
           mockProject.userId = user.id
         }
-        setProject(mockProject)
-        setInitialProject(mockProject)
-        setCurrentVersion(latestVersion)
-        setSelectedVersion(latestVersion)
-        setVersions(handleSetVersion(mockProject.versions));
+        handleUpdatedData(mockProject)
       }
     }
-
     getProject()
   }, [id, user])
+
+  const handleUpdatedData = (project: Project) =>{
+    setProject(project)
+    setInitialProject(project)
+    const latestVersion = findLatestVersion(project.versions)
+    setCurrentVersion(latestVersion)
+    setSelectedVersion(latestVersion)
+    setVersions(handleSetVersion(project.versions))
+  }
 
   const handleSetVersion =(versions: ProjectVersion[])=>{
     return versions.map((version) => {
@@ -122,7 +120,7 @@ const Project = () => {
     (phaseType: PhaseType) => {
       if (currentVersion) {
         const newPhase: ProjectPhase = {
-          id: Date.now().toString(),
+          id: (currentVersion.phases.length+1).toString(),
           projectVersionId: currentVersion?.id ?? '',
           name: "Nova Fase",
           weeks: 2,
@@ -162,7 +160,7 @@ const Project = () => {
     }
     
     if(currentVersion){
-      const versionData = {...currentVersion, projectId: projectId,version: (Number.parseFloat(currentVersion.version) + 0.1).toFixed(1) }
+      const versionData = {...currentVersion, projectId: projectId,version: id ? (Number.parseFloat(currentVersion.version) + 0.1).toFixed(1) : '1.0'}
       const responseCreateVersion = await createVersion(versionData)
       if(currentVersion.phases){
         for(const phase of currentVersion.phases){
@@ -171,8 +169,8 @@ const Project = () => {
         }
       }
     }
-    const updatedProject = await getProjectByUserId(user.id)
-    setProject(updatedProject.data)
+    const updatedProject = await getProjectById(projectId)
+    handleUpdatedData(updatedProject)
     navigate(`/project/${projectId}`);
   }
 
@@ -184,10 +182,10 @@ const Project = () => {
     return <LoadingSpinner />
   }
   const hasChanges = !isEqual(project, initialProject);
-  
   const projectPhases = currentVersion?.phases?.filter((phase:ProjectPhase) => phase.phaseType === PhaseType.PROJECT)
   const constructionPhases = currentVersion?.phases?.filter((phase:ProjectPhase) => phase.phaseType === PhaseType.CONSTRUCTION)
-
+  const totalProjectWeeks = currentVersion.phases.reduce((sum, phase) => sum + phase.weeks, 0)
+  const totalConstructionWeeks = currentVersion.phases.reduce((sum, phase) => sum + phase.weeks, 0)
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
@@ -228,7 +226,7 @@ const Project = () => {
             <div className="space-y-1">
               <h2 className="text-xl font-bold">Fases de Projeto</h2>
               <p className="text-sm text-gray-600">
-                Total: {projectPhases?.reduce((sum: any, phase: ProjectPhase) => sum + phase.weeks, 0) ?? 0} semanas
+              Total: {totalProjectWeeks} semanas ({(totalProjectWeeks / 4).toFixed(1)} meses)
               </p>
             </div>
           </div>
@@ -238,10 +236,11 @@ const Project = () => {
         </div>
 
         <TimelineSection
-          title="Fases de Projeto"
           phases={projectPhases}
           onUpdate={(updatedPhases:any) => handleUpdate({ phases: [...updatedPhases, ...constructionPhases ?? []] })}
           onDeletePhase={deletePhase}
+          totalWeeks={totalProjectWeeks}
+          projectStartDate={currentVersion.startDate.toString()}
         />
 
         <div className="mt-12 mb-8 border-b pb-4">
@@ -249,7 +248,7 @@ const Project = () => {
             <div className="space-y-1">
               <h2 className="text-xl font-bold">Fases de Obra</h2>
               <p className="text-sm text-gray-600">
-                Total: {constructionPhases?.reduce((sum:any, phase:ProjectPhase) => sum + phase.weeks, 0)} semanas
+                Total: {totalProjectWeeks} semanas ({(totalProjectWeeks / 4).toFixed(1)} meses)
               </p>
             </div>
           </div>
@@ -259,10 +258,11 @@ const Project = () => {
         </div>
 
         <TimelineSection
-          title="Fases de Obra"
           phases={constructionPhases}
           onUpdate={(updatedPhases:any) => handleUpdate({ phases: [...projectPhases ?? [], ...updatedPhases] })}
-          onDeletePhase={deletePhase}
+          onDeletePhase={(id) => deletePhase(id)}
+          totalWeeks={totalProjectWeeks}
+          projectStartDate={currentVersion.startDate.toString()}
         />
         {
           currentVersion && (
