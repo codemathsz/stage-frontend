@@ -45,12 +45,12 @@ export function TimelineSection({
     onUpdate(updatedPhases)
   }
 
-  const handleIndependentChange = (id: string, isIndependent: boolean, startDate?: Date) => {
+  const handleIndependentChange = (id: string, isIndependent: boolean, startDate?: string) => {
     const updatedPhases = phases.map(phase =>
       phase.id === id ? { 
         ...phase, 
         isIndependent, 
-        startDate: isIndependent ? (startDate || new Date(projectStartDate)) : new Date() 
+        startDate: isIndependent ? (startDate || projectStartDate) : new Date().toString() 
       } : phase
     )
     onUpdate(updatedPhases)
@@ -62,7 +62,7 @@ export function TimelineSection({
       return
     }
     const updatedPhases = phases.map(phase =>
-      phase.id === id ? { ...phase, startDate: new Date(startDate) } : phase
+      phase.id === id ? { ...phase, startDate: startDate } : phase
     )
     onUpdate(updatedPhases)
   }
@@ -239,7 +239,7 @@ export function TimelineSection({
                     value={milestone.date.toString()}
                     onChange={(e) => handleUpdateMilestone(phase.id, milestone.id, { date: new Date(e.target.value) })}
                     className="w-40"
-                    min={phase.startDate.getDate() || projectStartDate}
+                    min={phase.startDate || projectStartDate}
                   />
                   <Button
                     variant="ghost"

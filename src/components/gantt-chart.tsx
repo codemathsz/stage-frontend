@@ -9,7 +9,7 @@ interface GanttChartProps {
   projectVersion: ProjectVersion
 }
 
-export function GanttChart({ projectVersion }: GanttChartProps) {
+export function GanttChart({ projectVersion }: GanttChartProps) {  
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [zoom, setZoom] = useState(1)
   const [horizontalScroll, setHorizontalScroll] = useState(0)
@@ -28,16 +28,29 @@ export function GanttChart({ projectVersion }: GanttChartProps) {
     return newDate.toISOString().split("T")[0];
   };  
 
+  const calculatePhaseStartDate = (phaseIndex: number, phases: any[]): Date => {
+    let startDate = new Date(projectVersion!.startDate);
+    for (let i = 0; i < phaseIndex; i++) {
+      startDate.setDate(startDate.getDate() + phases[i].weeks * 7);
+    }
+    startDate.setDate(startDate.getDate() + phases[phaseIndex].weeks * 7)
+    return startDate;
+  };
+
   const calculatePhaseDates = (phases: ProjectPhase[], startDate: Date) => {
     let currentDate = new Date(startDate)
+    currentDate.setDate(currentDate.getDate() + 1)
     return phases.map((phase, index) => {
       if (phase.isIndependent && phase.independentDate) {
         currentDate = phase.independentDate
       } else if (index > 0) {
         currentDate = new Date(currentDate?.getTime())
       }
+      if(index != 0){
+        currentDate.setDate(currentDate?.getDate() + phases[index - 1].weeks * 7)
+      }
+      
       const updatedPhase = { ...phase, startDate: currentDate }
-      currentDate.setDate(currentDate?.getDate() + phase.weeks * 7)
       return updatedPhase
     })
   }
@@ -49,8 +62,9 @@ export function GanttChart({ projectVersion }: GanttChartProps) {
     )
     const constructionPhases = calculatePhaseDates(
       projectVersion?.phases.filter((phase) => phase.phaseType === PhaseType.CONSTRUCTION),
-      projectVersion.constructionStartDate,
+      calculatePhaseStartDate(projectPhases.length -1, projectPhases),
     )
+    
     const allPhases = [...projectPhases, ...constructionPhases]
     const totalWeeks = allPhases.reduce((sum, phase) => sum + phase.weeks, 0)
 
@@ -296,6 +310,7 @@ export function GanttChart({ projectVersion }: GanttChartProps) {
     }
   }
 
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -319,7 +334,6 @@ export function GanttChart({ projectVersion }: GanttChartProps) {
 
     window.addEventListener("resize", handleResize)
     handleResize()
-
     return () => window.removeEventListener("resize", handleResize)
   }, [projectVersion, zoom, horizontalScroll, verticalScroll])
 

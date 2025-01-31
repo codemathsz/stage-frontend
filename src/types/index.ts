@@ -34,7 +34,7 @@ export interface ProjectPhase {
   name: string;
   weeks: number;
   isIndependent: boolean;
-  startDate: Date;
+  startDate: string;
   independentDate: Date;
   phaseOrder: number;
   phaseType: PhaseType;

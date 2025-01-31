@@ -16,6 +16,8 @@ import { createPhase } from "@/api/phase-api"
 import isEqual from 'lodash/isEqual';
 import { ChevronLeft } from "lucide-react"
 import LoadingSpinner from "@/components/spinner"
+import { Label } from "@radix-ui/react-label"
+import { Input } from "@/components/ui/input"
 
 interface IVersion{
   id: string
@@ -30,6 +32,7 @@ const Project = () => {
   const [project, setProject] = useState<Project>()
   const [initialProject, setInitialProject] = useState<Project>(); 
   const [currentVersion, setCurrentVersion] = useState<ProjectVersion | null>(null)
+  const [constructionStartDate, setConstructionStartDate] = useState<string>()
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
   const findLatestVersion = (versions: ProjectVersion[]): ProjectVersion | null => {
@@ -85,6 +88,7 @@ const Project = () => {
       setSelectedVersion(current)
     }
   }
+
   const handleUpdate = useCallback(
     (updatedVersion: Partial<ProjectVersion>) => {
       if (project && currentVersion) {
@@ -125,7 +129,7 @@ const Project = () => {
           name: "Nova Fase",
           weeks: 2,
           isIndependent: false,
-          startDate: new Date(),
+          startDate: new Date().toString(),
           independentDate: new Date(),
           phaseOrder: currentVersion.phases.length + 1,
           phaseType: phaseType,
@@ -181,11 +185,31 @@ const Project = () => {
   if (!project || !currentVersion) {
     return <LoadingSpinner />
   }
+
+  const calculatePhaseStartDate = (phaseIndex: number, phases: ProjectPhase[]): string => {
+    let startDate = new Date(currentVersion!.startDate);
+    for (let i = 0; i < phaseIndex; i++) {
+      startDate.setDate(startDate.getDate() + phases[i].weeks * 7);
+    }
+    startDate.setDate(startDate.getDate() + phases[phaseIndex].weeks * 7)
+    return startDate.toISOString().split('T')[0];
+  };
+
   const hasChanges = !isEqual(project, initialProject);
   const projectPhases = currentVersion?.phases?.filter((phase:ProjectPhase) => phase.phaseType === PhaseType.PROJECT)
   const constructionPhases = currentVersion?.phases?.filter((phase:ProjectPhase) => phase.phaseType === PhaseType.CONSTRUCTION)
-  const totalProjectWeeks = currentVersion.phases.reduce((sum, phase) => sum + phase.weeks, 0)
-  const totalConstructionWeeks = currentVersion.phases.reduce((sum, phase) => sum + phase.weeks, 0)
+  const totalProjectWeeks = currentVersion.phases.reduce((sum, phase) => {
+    return phase.phaseType === PhaseType.PROJECT ? sum + phase.weeks : sum;
+  }, 0);
+  
+  const totalConstructionWeeks = currentVersion.phases.reduce((sum, phase) => {
+    return phase.phaseType === PhaseType.CONSTRUCTION ? sum + phase.weeks : sum;
+  }, 0);
+  
+  const lastProjectPhaseEndDate = calculatePhaseStartDate(projectPhases.length -1, projectPhases)
+  if(lastProjectPhaseEndDate && !constructionStartDate){
+    setConstructionStartDate(lastProjectPhaseEndDate);
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
@@ -248,8 +272,18 @@ const Project = () => {
             <div className="space-y-1">
               <h2 className="text-xl font-bold">Fases de Obra</h2>
               <p className="text-sm text-gray-600">
-                Total: {totalProjectWeeks} semanas ({(totalProjectWeeks / 4).toFixed(1)} meses)
+                Total: {totalConstructionWeeks} semanas ({(totalConstructionWeeks / 4).toFixed(1)} meses)
               </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="construction-start-date">Data de Início da Obra:</Label>
+              <Input
+                id="construction-start-date"
+                type="date"
+                value={constructionStartDate}
+                onChange={(e) => setConstructionStartDate(e.target.value)}
+                className="w-40"
+              />
             </div>
           </div>
           <Button onClick={() => addNewPhase(PhaseType.CONSTRUCTION)} className="mt-4">
@@ -261,13 +295,13 @@ const Project = () => {
           phases={constructionPhases}
           onUpdate={(updatedPhases:any) => handleUpdate({ phases: [...projectPhases ?? [], ...updatedPhases] })}
           onDeletePhase={(id) => deletePhase(id)}
-          totalWeeks={totalProjectWeeks}
-          projectStartDate={currentVersion.startDate.toString()}
+          totalWeeks={totalConstructionWeeks}
+          projectStartDate={constructionStartDate?.toString() ?? ''}
         />
         {
           currentVersion && (
           <div className="mt-8 pt-4 border-t-2 mb-8">
-            <GanttChart projectVersion={currentVersion!} />
+            <GanttChart projectVersion={currentVersion} />
           </div>
           )
         }
