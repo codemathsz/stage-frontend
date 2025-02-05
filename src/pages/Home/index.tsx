@@ -1,57 +1,53 @@
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus } from "lucide-react"
-import { Header } from "@/components/header"
-import { CalendarWidget } from "@/components/calendar-widget"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { User } from '@/types';
-import { formatDate } from '@/lib/utils';
-import { useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { API } from '@/lib/axios';
-import { setUserData } from '@/store/userSlice';
-import Cookies from 'js-cookie';
-import LoadingSpinner from '@/components/spinner';
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Plus } from "lucide-react";
+import { Header } from "@/components/header";
+import { CalendarWidget } from "@/components/calendar-widget";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { User } from "@/types";
+import { formatDate } from "@/lib/utils";
+import { useEffect } from "react";
+import Cookies from "js-cookie";
+import LoadingSpinner from "@/components/spinner";
+import { useGetUser } from "@/hooks/useGetUser";
 
 export default function Home() {
+
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.user.userData) as User
+  const getUser = useGetUser();
+  const user = useSelector((state: RootState) => state.user.userData) as User;
 
-  const handleCreateProject = () => {
-    navigate('/project');
-  }
-
-  const goToProject = (projectId:string)=>{
-    navigate(`/project/${projectId}`);
-  }
-
-  if (!user) {
-    return <LoadingSpinner/>
-  }
-
-  const getUser = async (token: string) => {
-    if (!token) return;
-    const decode: any = jwtDecode(token);
-    const response = await API.get(`/users/${decode.sub}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    dispatch(setUserData(response.data));
+  const navigateToProject = () => {
+    navigate("/project");
   };
 
-  useEffect(() =>{
-    const handleUpdateUserData = async () =>{
-      const token = Cookies.get('token');
-      await getUser(token!)
-    }
-    handleUpdateUserData()
-  },[])
+  const navigateToProjectById = (projectId: string) => {
+    navigate(`/project/${projectId}`);
+  };
+
+  if (!user) {
+    return <LoadingSpinner />;
+  }
+
+
+
+  useEffect(() => {
+    const handleUpdateUserData = async () => {
+      const token = Cookies.get("token");
+      await getUser(token!);
+    };
+    handleUpdateUserData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,8 +60,13 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="flex justify-between items-center mb-4">
-                <p className="text-muted-foreground">Total Projects: {user.projects.length}</p>
-                <Button onClick={handleCreateProject} className="flex items-center gap-2">
+                <p className="text-muted-foreground">
+                  Total Projects:{/*  {user.projects.length} */}
+                </p>
+                <Button
+                  onClick={navigateToProject}
+                  className="flex items-center gap-2"
+                >
                   <Plus className="w-4 h-4" />
                   Create New Project
                 </Button>
@@ -80,14 +81,28 @@ export default function Home() {
                 </TableHeader>
                 <TableBody>
                   {user.projects.map((project) => {
-                    const latestVersion = project.versions.reduce((latest, current) => {
-                      return parseFloat(current.version) > parseFloat(latest.version) ? current : latest;
-                    }, project.versions[0]);
+                    const latestVersion = project.versions.reduce(
+                      (latest, current) => {
+                        return parseFloat(current.version) >
+                          parseFloat(latest.version)
+                          ? current
+                          : latest;
+                      },
+                      project.versions[0]
+                    );
                     return (
-                      <TableRow key={project.id} className='cursor-pointer' title='acessar projeto' onClick={() => goToProject(project.id)}>
+                      <TableRow
+                        key={project.id}
+                        className="cursor-pointer"
+                        title="acessar projeto"
+                        onClick={() => navigateToProjectById(project.id)}
+                      >
                         <TableCell>{project?.cod}</TableCell>
                         <TableCell>{latestVersion?.title}</TableCell>
-                        <TableCell >{latestVersion?.startDate && formatDate(latestVersion?.startDate?.toString())}</TableCell>
+                        <TableCell>
+                          {latestVersion?.startDate &&
+                            formatDate(latestVersion?.startDate?.toString())}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -101,5 +116,5 @@ export default function Home() {
         </div>
       </main>
     </div>
-  )
+  );
 }
