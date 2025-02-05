@@ -18,6 +18,7 @@ import { ChevronLeft } from "lucide-react"
 import LoadingSpinner from "@/components/spinner"
 import { Label } from "@radix-ui/react-label"
 import { Input } from "@/components/ui/input"
+import { createMilestone } from "@/api/milestone-api"
 
 interface IVersion{
   id: string
@@ -173,6 +174,11 @@ const Project = () => {
         for(const phase of currentVersion.phases){
           const currentPhase: ProjectPhase = {...phase, projectVersionId: responseCreateVersion.id}
           await createPhase(currentPhase)
+          if(currentPhase.milestones){
+            for(const milestone of currentPhase.milestones){
+              await createMilestone(milestone)
+            }
+          }
         }
       }
     }
