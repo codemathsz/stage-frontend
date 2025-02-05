@@ -61,7 +61,7 @@ export default function Home() {
             <CardContent>
               <div className="flex justify-between items-center mb-4">
                 <p className="text-muted-foreground">
-                  Total Projects:{/*  {user.projects.length} */}
+                  Total Projects: {user?.projects?.length ?? 0}
                 </p>
                 <Button
                   onClick={navigateToProject}
@@ -80,7 +80,7 @@ export default function Home() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {user.projects.map((project) => {
+                  {user?.projects?.map((project) => {
                     const latestVersion = project.versions.reduce(
                       (latest, current) => {
                         return parseFloat(current.version) >

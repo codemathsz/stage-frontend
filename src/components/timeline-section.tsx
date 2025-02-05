@@ -106,8 +106,7 @@ export function TimelineSection({
               }
               milestone.date = updatedMilestone.date;
             }
-            milestone.name = updatedMilestone?.name ?? ''
-            return milestone
+            return milestone = {...milestone, ...updatedMilestone}
           }
           return milestone;
         });
