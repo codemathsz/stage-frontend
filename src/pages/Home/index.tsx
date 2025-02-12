@@ -65,7 +65,7 @@ export default function Home() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {user.projects.map((project) => {
+                  {user?.projects?.map((project) => {
                     const latestVersion = project.versions.reduce(
                       (latest, current) => {
                         return parseFloat(current.version) >
