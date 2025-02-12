@@ -20,6 +20,7 @@ import { useEffect } from "react";
 import Cookies from "js-cookie";
 import LoadingSpinner from "@/components/spinner";
 import { useGetUser } from "@/hooks/useGetUser";
+import { CarouselComponent } from "@/components/carousel-component";
 
 export default function Home() {
 
@@ -50,9 +51,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" bg-background">
       <Header user={user} />
-      <main className="container mx-auto py-8">
+      <main className="w-11/12 mx-auto flex flex-col gap-16">
+        <div className="w-full h-auto max-h-[36rem] mb-8">
+          <CarouselComponent/>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="col-span-2">
             <CardHeader>
