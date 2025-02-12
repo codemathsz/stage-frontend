@@ -23,33 +23,27 @@ export function Header({ user }: HeaderProps) {
         <div className="flex items-center gap-8">
           <div className="relative w-14 h-12 bg-black rounded-lg mr-8">
             <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/STG_ICON_LOW-001-MpE6LuBK5SE8fiPQ69rXmRfLqi8Bqe.png"
-                alt="STG Logo"
-                className="w-full h-full object-contain"
-              />
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/STG_ICON_LOW-001-MpE6LuBK5SE8fiPQ69rXmRfLqi8Bqe.png"
+              alt="STG Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <NavigationMenu>
             <NavigationMenuList className="flex items-center gap-12">
               <NavigationMenuItem>
-                <Link to="/home">
-                  <NavigationMenuLink>
-                    Inicio
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink href="/home">
+                  Inicio
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link to="/project">
-                  <NavigationMenuLink>
-                    Projetos
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink href="/project">
+                  Projetos
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link to="/home">
-                  <NavigationMenuLink>
-                    Reuniões
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink href="#">
+                  Reuniões
+                </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
