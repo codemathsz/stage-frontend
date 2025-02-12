@@ -44,12 +44,12 @@ export default function Home() {
   return (
     <div className=" bg-background">
       <Header user={user} />
-      <main className="w-11/12 mx-auto flex flex-col gap-16">
+      <main className="w-11/12 mx-auto max-w-[90rem] flex flex-col gap-16">
         <div className="w-full h-auto max-h-[36rem] mb-8">
           <CarouselComponent/>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="col-span-2">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Últimos 5 Projetos</CardTitle>
               <CardDescription>Acompanhe os projetos mais recentes em andamento</CardDescription>
@@ -88,7 +88,7 @@ export default function Home() {
                           {latestVersion?.startDate &&
                             formatDate(latestVersion?.startDate?.toString())}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-1/2 flex items-center justify-center">
                           {latestVersion?.phases.length}
                         </TableCell>
                       </TableRow>

@@ -30,7 +30,7 @@ export function CarouselComponent() {
           {photos.map((photo, index) => (
             <CarouselItem key={index}>
               <div className="w-full p-1">
-                <Card className="w-full h-[32rem]">
+                <Card className="w-full h-[32rem] max-md:h-auto">
                   <CardContent className="w-full h-auto max-h-[36rem] flex items-center justify-center !p-0">
                     <img
                       src={photo.url}
