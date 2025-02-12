@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
   Table,
@@ -10,10 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
 import { Header } from "@/components/header";
 import { CalendarWidget } from "@/components/calendar-widget";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { useEffect } from "react";
@@ -23,14 +21,9 @@ import { useGetUser } from "@/hooks/useGetUser";
 import { CarouselComponent } from "@/components/carousel-component";
 
 export default function Home() {
-
   const navigate = useNavigate();
   const getUser = useGetUser();
   const user = useSelector((state: RootState) => state.user.userData) as User;
-
-  const navigateToProject = () => {
-    navigate("/project");
-  };
 
   const navigateToProjectById = (projectId: string) => {
     navigate(`/project/${projectId}`);
@@ -39,8 +32,6 @@ export default function Home() {
   if (!user) {
     return <LoadingSpinner />;
   }
-
-
 
   useEffect(() => {
     const handleUpdateUserData = async () => {
@@ -60,27 +51,17 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="col-span-2">
             <CardHeader>
-              <CardTitle>Project Overview</CardTitle>
+              <CardTitle>Últimos 5 Projetos</CardTitle>
+              <CardDescription>Acompanhe os projetos mais recentes em andamento</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-muted-foreground">
-                  Total Projects:{/*  {user.projects.length} */}
-                </p>
-                <Button
-                  onClick={navigateToProject}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create New Project
-                </Button>
-              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Project Code</TableHead>
-                    <TableHead>Project Name</TableHead>
-                    <TableHead>Start Date</TableHead>
+                    <TableHead>Código do Projeto</TableHead>
+                    <TableHead>Nome do Projeto</TableHead>
+                    <TableHead>Data de Inicio</TableHead>
+                    <TableHead>Nº de fases</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -106,6 +87,9 @@ export default function Home() {
                         <TableCell>
                           {latestVersion?.startDate &&
                             formatDate(latestVersion?.startDate?.toString())}
+                        </TableCell>
+                        <TableCell>
+                          {latestVersion?.phases.length}
                         </TableCell>
                       </TableRow>
                     );
