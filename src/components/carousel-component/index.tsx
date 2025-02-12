@@ -20,19 +20,6 @@ export function CarouselComponent() {
     {name: 'photo 5', url: Photo5},
   ]
 
-  React.useEffect(() => {
-    if (!api) {
-      return
-    }
- 
-    setCount(api.scrollSnapList().length)
-    setCurrent(api.selectedScrollSnap() + 1)
- 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1)
-    })
-  }, [api])
-
   const plugin = React.useRef(
     Autoplay({ delay: 4000, stopOnInteraction: true })
   )
