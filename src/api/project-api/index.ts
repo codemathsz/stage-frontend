@@ -14,6 +14,18 @@ export const createProject = async (project: Project): Promise<Project> => {
   return response.data;
 };
 
+export const updateProjectApi = async (project: Project): Promise<Project> =>{
+  const token = Cookies.get('token');
+
+  const response = await API.put(`/api/project/${project.id}`, project, {
+    headers: { 
+      'Content-Type':'application/json',
+      'Authorization': `Bearer ${token}` 
+    } 
+  })
+  return response.data
+}
+
 export const getProjectById = async (id: string): Promise<Project> => {
   const token = Cookies.get("token");
 

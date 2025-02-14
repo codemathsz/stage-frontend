@@ -10,7 +10,7 @@ import { useSelector } from "react-redux"
 import { RootState } from "@/store/store"
 import { GanttChart } from "@/components/gantt-chart"
 import { ExportButtons } from "@/components/export-buttons"
-import { createProject, getProjectById } from "@/api/project-api"
+import { createProject, getProjectById, updateProjectApi } from "@/api/project-api"
 import { createVersion } from "@/api/version-api"
 import { createPhase } from "@/api/phase-api"
 import isEqual from 'lodash/isEqual';
@@ -161,6 +161,9 @@ const Project = () => {
     if(!project.id && !id){
       const responseCreateProject = await createProject(project)
       projectId = responseCreateProject.id
+    }else{
+      const responseUpdateProject = await updateProjectApi(project);
+      projectId = responseUpdateProject.id
     }
     
     if(currentVersion){
