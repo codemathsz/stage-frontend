@@ -5,7 +5,7 @@ import { User } from "@/types"
 import { Menu } from "lucide-react"
 
 interface HeaderProps {
-  user: User
+  user?: User
 }
 
 export function Header({ user }: HeaderProps) {
@@ -20,7 +20,7 @@ export function Header({ user }: HeaderProps) {
       <div className="container mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-bold">Project Manager</h1>
         <div className="flex items-center gap-4">
-          <p>Hello, {user.name}</p>
+          <p>Hello, {user?.name}</p>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon">

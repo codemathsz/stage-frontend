@@ -39,7 +39,7 @@ export default function Home() {
     return <LoadingSpinner />;
   }
 
-
+  console.log(user.projects)
 
   useEffect(() => {
     const handleUpdateUserData = async () => {
@@ -61,7 +61,7 @@ export default function Home() {
             <CardContent>
               <div className="flex justify-between items-center mb-4">
                 <p className="text-muted-foreground">
-                  Total Projects:{/*  {user.projects.length} */}
+                  Total Projects:  {user.projects.length} 
                 </p>
                 <Button
                   onClick={navigateToProject}

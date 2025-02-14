@@ -1,87 +1,96 @@
-import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Plus, X, ChevronUp, ChevronDown, Trash2 } from 'lucide-react'
-import { Milestone, ProjectPhase } from '@/types'
-import { formatDate } from '@/lib/utils'
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Plus, X, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { Milestone, ProjectPhase } from "@/types";
+import { formatDate } from "@/lib/utils";
 
 interface TimelineSectionProps {
-  phases: ProjectPhase[]
-  totalWeeks: number
-  onUpdate: (updatedPhases: ProjectPhase[]) => void
-  projectStartDate: string
-  onDeletePhase: (id: string) => void
+  phases: ProjectPhase[];
+  totalWeeks: number;
+  onUpdate: (updatedPhases: ProjectPhase[]) => void;
+  projectStartDate: string;
+  onDeletePhase: (id: string) => void;
 }
 
-export function TimelineSection({ 
-  phases, 
-  totalWeeks, 
-  onUpdate,   
-  projectStartDate, 
+export function TimelineSection({
+  phases,
+  totalWeeks,
+  onUpdate,
+  projectStartDate,
   onDeletePhase,
 }: TimelineSectionProps) {
-  const [editingPhase, setEditingPhase] = useState<string | null>(null)
+  const [editingPhase, setEditingPhase] = useState<string | null>(null);
 
   const calculatePhaseStartDate = (phaseIndex: number): string => {
     let startDate = new Date(projectStartDate);
     for (let i = 0; i < phaseIndex; i++) {
       startDate.setDate(startDate.getDate() + phases[i].weeks * 7);
     }
-    return startDate.toISOString().split('T')[0];
+    return startDate.toISOString().split("T")[0];
   };
 
   const validateDate = (date: string, phaseStartDate: string) => {
-    const projectStart = new Date(projectStartDate)
-    const phaseStart = new Date(phaseStartDate)
-    const selectedDate = new Date(date)
-    return selectedDate >= projectStart && selectedDate >= phaseStart
-  }
+    const projectStart = new Date(projectStartDate);
+    const phaseStart = new Date(phaseStartDate);
+    const selectedDate = new Date(date);
+    return selectedDate >= projectStart && selectedDate >= phaseStart;
+  };
 
   const handleWeekChange = (id: string, weeks: number) => {
-    const updatedPhases = phases.map(phase =>
+    const updatedPhases = phases.map((phase) =>
       phase.id === id ? { ...phase, weeks } : phase
-    )
-    onUpdate(updatedPhases)
-  }
+    );
+    onUpdate(updatedPhases);
+  };
 
-  const handleIndependentChange = (id: string, isIndependent: boolean, startDate?: string) => {
-    const updatedPhases = phases.map(phase =>
-      phase.id === id ? { 
-        ...phase, 
-        isIndependent, 
-        startDate: isIndependent ? (startDate || projectStartDate) : new Date().toString() 
-      } : phase
-    )
-    onUpdate(updatedPhases)
-  }
+  const handleIndependentChange = (
+    id: string,
+    isIndependent: boolean,
+    startDate?: string
+  ) => {
+    const updatedPhases = phases.map((phase) =>
+      phase.id === id
+        ? {
+            ...phase,
+            isIndependent,
+            startDate: isIndependent
+              ? startDate || projectStartDate
+              : new Date().toString(),
+          }
+        : phase
+    );
+    onUpdate(updatedPhases);
+  };
 
   const handleStartDateChange = (id: string, startDate: string) => {
     if (!validateDate(startDate, projectStartDate)) {
-      alert('A data deve ser posterior à data de início do projeto')
-      return
+      alert("A data deve ser posterior à data de início do projeto");
+      return;
     }
-    const updatedPhases = phases.map(phase =>
+    const updatedPhases = phases.map((phase) =>
       phase.id === id ? { ...phase, startDate: startDate } : phase
-    )
-    onUpdate(updatedPhases)
-  }
+    );
+    onUpdate(updatedPhases);
+  };
 
   const handleAddMilestone = (phaseId: string) => {
     const updatedPhases = phases.map((phase, index) => {
       if (phase.id === phaseId) {
-        const phaseStartDate = phase.isIndependent && phase.startDate
-          ? new Date(phase.startDate)
-          : new Date(calculatePhaseStartDate(index));
-        
+        const phaseStartDate =
+          phase.isIndependent && phase.startDate
+            ? new Date(phase.startDate)
+            : new Date(calculatePhaseStartDate(index));
+
         const newMilestoneDate = new Date(phaseStartDate);
         newMilestoneDate.setDate(newMilestoneDate.getDate() + 1); // Set to next day
-        
+
         const newMilestone: Milestone = {
-          id: '',
-          name: 'Novo Marco',
+          id: "",
+          name: "Novo Marco",
           date: newMilestoneDate,
-          projectPhaseId: phase.id
+          projectPhaseId: phase.id,
         };
         return { ...phase, milestones: [...phase.milestones, newMilestone] };
       }
@@ -90,19 +99,26 @@ export function TimelineSection({
     onUpdate(updatedPhases);
   };
 
-  const handleUpdateMilestone = (phaseId: string, milestoneId: string, updatedMilestone: Partial<Milestone>) => {
+  const handleUpdateMilestone = (
+    phaseId: string,
+    milestoneId: string,
+    updatedMilestone: Partial<Milestone>
+  ) => {
     const updatedPhases = phases.map((phase, phaseIndex) => {
       if (phase.id === phaseId) {
-        const phaseStartDate = phase.isIndependent && phase.startDate
-          ? new Date(phase.startDate)
-          : new Date(calculatePhaseStartDate(phaseIndex));
-        
-        const updatedMilestones = phase.milestones.map(milestone => {
+        const phaseStartDate =
+          phase.isIndependent && phase.startDate
+            ? new Date(phase.startDate)
+            : new Date(calculatePhaseStartDate(phaseIndex));
+
+        const updatedMilestones = phase.milestones.map((milestone) => {
           if (milestone.id === milestoneId) {
             if (updatedMilestone.date) {
               const newDate = new Date(updatedMilestone.date);
               if (newDate < phaseStartDate) {
-                alert('A data do marco deve ser posterior à data de início da fase');
+                alert(
+                  "A data do marco deve ser posterior à data de início da fase"
+                );
                 return milestone;
               }
             }
@@ -118,28 +134,36 @@ export function TimelineSection({
   };
 
   const handleRemoveMilestone = (phaseId: string, milestoneId: string) => {
-    const updatedPhases = phases.map(phase => {
+    const updatedPhases = phases.map((phase) => {
       if (phase.id === phaseId) {
-        const updatedMilestones = phase.milestones.filter(milestone => milestone.id !== milestoneId)
-        return { ...phase, milestones: updatedMilestones }
+        const updatedMilestones = phase.milestones.filter(
+          (milestone) => milestone.id !== milestoneId
+        );
+        return { ...phase, milestones: updatedMilestones };
       }
-      return phase
-    })
-    onUpdate(updatedPhases)
-  }
+      return phase;
+    });
+    onUpdate(updatedPhases);
+  };
 
-  const handleMovePhase = (index: number, direction: 'up' | 'down') => {
+  const handleMovePhase = (index: number, direction: "up" | "down") => {
     const newPhases = [...phases];
-    if (direction === 'up' && index > 0) {
-      [newPhases[index - 1], newPhases[index]] = [newPhases[index], newPhases[index - 1]];
-    } else if (direction === 'down' && index < newPhases.length - 1) {
-      [newPhases[index], newPhases[index + 1]] = [newPhases[index + 1], newPhases[index]];
+    if (direction === "up" && index > 0) {
+      [newPhases[index - 1], newPhases[index]] = [
+        newPhases[index],
+        newPhases[index - 1],
+      ];
+    } else if (direction === "down" && index < newPhases.length - 1) {
+      [newPhases[index], newPhases[index + 1]] = [
+        newPhases[index + 1],
+        newPhases[index],
+      ];
     }
     onUpdate(newPhases);
   };
 
   const handleDeletePhase = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta fase?')) {
+    if (window.confirm("Tem certeza que deseja excluir esta fase?")) {
       onDeletePhase(id);
     }
   };
@@ -148,7 +172,10 @@ export function TimelineSection({
     <div className="mb-8">
       <div className="space-y-4">
         {phases.map((phase, index) => (
-          <div key={phase.id} className="flex flex-col gap-2 bg-white p-4 rounded-lg shadow">
+          <div
+            key={phase.id}
+            className="flex flex-col gap-2 bg-white p-4 rounded-lg shadow"
+          >
             <div className="flex items-center gap-4">
               <div className="w-64">
                 <Input
@@ -162,14 +189,21 @@ export function TimelineSection({
                 />
               </div>
               <div className="text-sm text-gray-600">
-                Início: {formatDate(phase.isIndependent ? phase.startDate.toString()! : calculatePhaseStartDate(index))}
+                Início:{" "}
+                {formatDate(
+                  phase.isIndependent
+                    ? phase.startDate.toString()!
+                    : calculatePhaseStartDate(index)
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
                   min="1"
                   value={phase.weeks}
-                  onChange={(e) => handleWeekChange(phase.id, parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleWeekChange(phase.id, parseInt(e.target.value) || 0)
+                  }
                   className="w-20 p-1"
                   onFocus={() => setEditingPhase(phase.id)}
                   onBlur={() => setEditingPhase(null)}
@@ -181,7 +215,7 @@ export function TimelineSection({
                   className="h-full rounded transition-all duration-300"
                   style={{
                     width: `${(phase.weeks / totalWeeks) * 100}%`,
-                    backgroundColor: `rgba(240, 139, 107, ${1 - index * 0.1})`
+                    backgroundColor: `rgba(240, 139, 107, ${1 - index * 0.1})`,
                   }}
                 />
               </div>
@@ -189,14 +223,18 @@ export function TimelineSection({
                 <span className="text-sm">Independente</span>
                 <Switch
                   checked={phase.isIndependent}
-                  onCheckedChange={(checked) => handleIndependentChange(phase.id, checked)}
+                  onCheckedChange={(checked) =>
+                    handleIndependentChange(phase.id, checked)
+                  }
                 />
               </div>
               {phase.isIndependent && (
                 <Input
                   type="date"
                   value={phase.startDate.toString()}
-                  onChange={(e) => handleStartDateChange(phase.id, e.target.value)}
+                  onChange={(e) =>
+                    handleStartDateChange(phase.id, e.target.value)
+                  }
                   className="w-40"
                 />
               )}
@@ -204,15 +242,18 @@ export function TimelineSection({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleMovePhase(index, 'up')}
-                  disabled={index === 0 || (index > 0 && phases[index - 1].startDate !== null)}
+                  onClick={() => handleMovePhase(index, "up")}
+                  disabled={
+                    index === 0 ||
+                    (index > 0 && phases[index - 1].startDate !== null)
+                  }
                 >
                   <ChevronUp className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleMovePhase(index, 'down')}
+                  onClick={() => handleMovePhase(index, "down")}
                   disabled={index === phases.length - 1}
                 >
                   <ChevronDown className="h-4 w-4" />
@@ -231,20 +272,30 @@ export function TimelineSection({
                 <div key={milestone.id} className="flex items-center gap-2">
                   <Input
                     value={milestone.name}
-                    onChange={(e) => handleUpdateMilestone(phase.id, milestone.id, { name: e.target.value })}
+                    onChange={(e) =>
+                      handleUpdateMilestone(phase.id, milestone.id, {
+                        name: e.target.value,
+                      })
+                    }
                     className="w-48"
                   />
                   <Input
                     type="date"
                     value={milestone.date.toString()}
-                    onChange={(e) => handleUpdateMilestone(phase.id, milestone.id, { date: new Date(e.target.value) })}
+                    onChange={(e) =>
+                      handleUpdateMilestone(phase.id, milestone.id, {
+                        date: new Date(e.target.value),
+                      })
+                    }
                     className="w-40"
                     min={phase.startDate || projectStartDate}
                   />
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemoveMilestone(phase.id, milestone.id)}
+                    onClick={() =>
+                      handleRemoveMilestone(phase.id, milestone.id)
+                    }
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -267,5 +318,5 @@ export function TimelineSection({
         </p>
       </div>
     </div>
-  )
+  );
 }

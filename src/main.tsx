@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import App from './App';
+import {App} from './App';
 import './index.css';
 import { Provider } from 'react-redux';
 import { persistor, store } from './store/store';
