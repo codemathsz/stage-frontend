@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, X, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 import { Milestone, ProjectPhase } from "@/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateISO } from "@/lib/utils";
 
 interface TimelineSectionProps {
   phases: ProjectPhase[];
@@ -89,6 +89,10 @@ export function TimelineSection({
         const newMilestone: Milestone = {
           id: "",
           name: "Novo Marco",
+
+          id: "",
+          name: "",
+
           date: newMilestoneDate,
           projectPhaseId: phase.id,
         };
@@ -107,22 +111,22 @@ export function TimelineSection({
     const updatedPhases = phases.map((phase, phaseIndex) => {
       if (phase.id === phaseId) {
         const phaseStartDate =
-          phase.isIndependent && phase.startDate
+          phase.isIndependent && formatDateISO(phase.startDate)
             ? new Date(phase.startDate)
             : new Date(calculatePhaseStartDate(phaseIndex));
 
         const updatedMilestones = phase.milestones.map((milestone) => {
           if (milestone.id === milestoneId) {
             if (updatedMilestone.date) {
-              const newDate = new Date(updatedMilestone.date);
-              if (newDate < phaseStartDate) {
+              if (updatedMilestone.date < phaseStartDate) {
                 alert(
                   "A data do marco deve ser posterior à data de início da fase"
                 );
                 return milestone;
               }
+              milestone.date = updatedMilestone.date;
             }
-            return { ...milestone, ...updatedMilestone };
+            return (milestone = { ...milestone, ...updatedMilestone });
           }
           return milestone;
         });
@@ -272,6 +276,7 @@ export function TimelineSection({
                 <div key={milestone.id} className="flex items-center gap-2">
                   <Input
                     value={milestone.name}
+                    placeholder="Novo Marco"
                     onChange={(e) =>
                       handleUpdateMilestone(phase.id, milestone.id, {
                         name: e.target.value,

@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
   Table,
@@ -10,26 +9,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
 import { Header } from "@/components/header";
 import { CalendarWidget } from "@/components/calendar-widget";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { useEffect } from "react";
 import Cookies from "js-cookie";
 import LoadingSpinner from "@/components/spinner";
 import { useGetUser } from "@/hooks/useGetUser";
+import { CarouselComponent } from "@/components/carousel-component";
 
 export default function Home() {
-
   const navigate = useNavigate();
   const getUser = useGetUser();
   const user = useSelector((state: RootState) => state.user.userData) as User;
-
-  const navigateToProject = () => {
-    navigate("/project");
-  };
 
   const navigateToProjectById = (projectId: string) => {
     navigate(`/project/${projectId}`);
@@ -39,7 +33,7 @@ export default function Home() {
     return <LoadingSpinner />;
   }
 
-  console.log(user.projects)
+
 
   useEffect(() => {
     const handleUpdateUserData = async () => {
@@ -50,37 +44,30 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" bg-background">
       <Header user={user} />
-      <main className="container mx-auto py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="col-span-2">
+      <main className="w-11/12 mx-auto max-w-[90rem] flex flex-col gap-16">
+        <div className="w-full h-auto max-h-[36rem] mb-8">
+          <CarouselComponent/>
+        </div>
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Project Overview</CardTitle>
+              <CardTitle>Últimos 5 Projetos</CardTitle>
+              <CardDescription>Acompanhe os projetos mais recentes em andamento</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-muted-foreground">
-                  Total Projects:  {user.projects.length} 
-                </p>
-                <Button
-                  onClick={navigateToProject}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create New Project
-                </Button>
-              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Project Code</TableHead>
-                    <TableHead>Project Name</TableHead>
-                    <TableHead>Start Date</TableHead>
+                    <TableHead>Código do Projeto</TableHead>
+                    <TableHead>Nome do Projeto</TableHead>
+                    <TableHead>Data de Inicio</TableHead>
+                    <TableHead>Nº de fases</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {user.projects.map((project) => {
+                  {user?.projects?.map((project) => {
                     const latestVersion = project.versions.reduce(
                       (latest, current) => {
                         return parseFloat(current.version) >
@@ -103,6 +90,9 @@ export default function Home() {
                           {latestVersion?.startDate &&
                             formatDate(latestVersion?.startDate?.toString())}
                         </TableCell>
+                        <TableCell className="w-1/2 flex items-center justify-center">
+                          {latestVersion?.phases.length}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -110,11 +100,11 @@ export default function Home() {
               </Table>
             </CardContent>
           </Card>
+          </div>
           <div>
             <CalendarWidget />
           </div>
+          </main>
         </div>
-      </main>
-    </div>
   );
 }

@@ -18,6 +18,7 @@ import { ChevronLeft } from "lucide-react"
 import LoadingSpinner from "@/components/spinner"
 import { Label } from "@radix-ui/react-label"
 import { Input } from "@/components/ui/input"
+import { createMilestone } from "@/api/milestone-api"
 
 interface IVersion{
   id: string
@@ -65,7 +66,7 @@ const Project = () => {
   const handleUpdatedData = (project: Project) =>{
     setProject(project)
     setInitialProject(project)
-    const latestVersion = findLatestVersion(project.versions)
+    const latestVersion = findLatestVersion(project?.versions)
     setCurrentVersion(latestVersion)
     setSelectedVersion(latestVersion)
     setVersions(handleSetVersion(project.versions))
@@ -155,31 +156,57 @@ const Project = () => {
     [currentVersion, handleUpdate],
   )
 
-  const saveConfigurations = async() => {
-    if(!project) return
+  const saveConfigurations = async () => {
+    if (!project) return;
+  
     let projectId = project.id;
-    if(!project.id && !id){
-      const responseCreateProject = await createProject(project)
-      projectId = responseCreateProject.id
-    }else{
+  
+    if (!project.id && !id) {
+      const responseCreateProject = await createProject(project);
+      projectId = responseCreateProject.id;
+    } else {
       const responseUpdateProject = await updateProjectApi(project);
-      projectId = responseUpdateProject.id
+      projectId = responseUpdateProject.id;
     }
-    
-    if(currentVersion){
-      const versionData = {...currentVersion, projectId: projectId,version: id ? (Number.parseFloat(currentVersion.version) + 0.1).toFixed(1) : '1.0'}
-      const responseCreateVersion = await createVersion(versionData)
-      if(currentVersion.phases){
-        for(const phase of currentVersion.phases){
-          const currentPhase: ProjectPhase = {...phase, projectVersionId: responseCreateVersion.id}
-          await createPhase(currentPhase)
+  
+    if (currentVersion) {
+      const versionData = {
+        ...currentVersion,
+        projectId: projectId,
+        version: id
+          ? (Number.parseFloat(currentVersion.version) + 0.1).toFixed(1)
+          : '1.0'
+      };
+  
+      const responseCreateVersion = await createVersion(versionData);
+  
+      if (currentVersion.phases) {
+        for (const phase of currentVersion.phases) {
+          const currentPhase = {
+            ...phase,
+            projectVersionId: responseCreateVersion.id
+          };
+          const responseCreatePhase = await createPhase(currentPhase);
+  
+          if (currentPhase.milestones) {
+            for (const milestone of currentPhase.milestones) {
+              const milestoneData ={
+                ...milestone,
+                projectPhaseId: responseCreatePhase.id
+              }
+              console.log(milestoneData);
+              await createMilestone(milestoneData);
+            }
+          }
         }
       }
     }
-    const updatedProject = await getProjectById(projectId)
-    handleUpdatedData(updatedProject)
+  
+    const updatedProject = await getProjectById(projectId);
+    handleUpdatedData(updatedProject);
     navigate(`/project/${projectId}`);
-  }
+  };
+  
 
   const handleGoToHome = () =>{
     navigate('/home')
