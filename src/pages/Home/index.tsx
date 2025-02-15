@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Header } from "@/components/header";
 import { CalendarWidget } from "@/components/calendar-widget";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "@/types";
@@ -45,7 +44,7 @@ export default function Home() {
 
   return (
     <div className=" bg-background">
-      <Header user={user} />
+     
       <main className="w-11/12 mx-auto max-w-[90rem] flex flex-col gap-16">
         <div className="w-full h-auto max-h-[36rem] mb-8">
           <CarouselComponent/>

@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -18,10 +24,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = Cookies.get('token');
+    const token = Cookies.get("token");
     if (token) {
       setIsAuthenticated(true);
     } else {
@@ -31,15 +36,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (token: string) => {
-    Cookies.set('token', token, { expires: 7 });
+    Cookies.set("token", token, { expires: 7 });
     setIsAuthenticated(true);
-    navigate('/home');
+    window.location.href = "/home";
   };
 
   const logout = () => {
-    Cookies.remove('token');
+    Cookies.remove("token");
     setIsAuthenticated(false);
-    navigate('/login'); 
+    window.location.href = "/";
   };
 
   return (
@@ -52,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
