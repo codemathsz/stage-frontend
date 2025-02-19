@@ -13,7 +13,7 @@ export function Router() {
     const navigate = useNavigate();
 
     useEffect(() => {
-      navigate(isAuthenticated ? "/projects" : "/", { replace: true });
+      navigate(isAuthenticated ? "/projects" : "/login", { replace: true });
     }, [isAuthenticated, navigate]);
 
     return null;
@@ -21,10 +21,10 @@ export function Router() {
 
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
       <Route path="/" element={<DefaultLayout />}>
         <Route path="/" element={<RootRedirect />} />
 
-        <Route path="/" element={<Login />} />
         <Route path="/projects" element={<ListProjects />} />
 
         <Route element={<ProtectedRoute />}>
