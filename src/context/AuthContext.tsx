@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (token: string) => {
     Cookies.set("token", token, { expires: 7 });
     setIsAuthenticated(true);
-    window.location.href = "/home";
+    window.location.href = "/projects";
   };
 
   const logout = () => {

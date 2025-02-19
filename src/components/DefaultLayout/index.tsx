@@ -4,7 +4,7 @@ import { SideBar } from "../SideBar";
 
 export function DefaultLayout() {
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-background">
       <SideBar />
       <div className="flex-1 flex-col m-3">
       <Header />
