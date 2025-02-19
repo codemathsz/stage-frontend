@@ -29,7 +29,6 @@ export function ProjectHeader({project, projectData, onUpdate, onUpdateProject }
   return (
     <div className="mb-8">
       <div className="flex gap-8 mb-6">
-        {/* Left column with logo and project code */}
         <div className="w-[20%] flex flex-col items-start">
           <div className="relative w-32 h-32 mb-4 bg-black rounded-lg">
             <img
