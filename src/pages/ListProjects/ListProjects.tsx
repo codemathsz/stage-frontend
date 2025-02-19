@@ -23,6 +23,7 @@ import {
   Trash,
   Pencil,
   Clipboard,
+  X,
 } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -61,26 +62,30 @@ export function ListProjects() {
     );
 
   return (
-    <div className="bg-[#F9F9F9]">
-      <div className="flex justify-between items-center px-6 mt-8 h-20 border rounded-lg border-gray-200">
-        <div className="relative w-full max-w-xl">
-          <MagnifyingGlass
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-          />
+    <div className="bg-transparent">
+      <div className="bg-white flex justify-between items-center px-6 mt-8 h-20 rounded-lg shadow-sm">
+        <div className="relative w-full max-w-xl flex items-center gap-4">
           <Input
             onChange={(event) => setFilter(event.target.value)}
+            value={filter}
             placeholder="Digite o nome ou código do projeto"
-            className="pl-10 w-full focus:border-none placeholder:font-bold"
+            className="bg-white px-4 py-6 border font-poppins font-medium border-secondary border-opacity-25 w-full focus:!outline-none focus:ring-0 focus:ring-transparent placeholder:font-medium placeholder:font-poppins"
           />
+          {filter ?(
+            <div className="w-12 h-12 p-2 flex items-center justify-center border rounded-lg border-secondary border-opacity-25 cursor-pointer" title="limpar" onClick={() => setFilter('')}>
+              <X size={32} className="text-secondary"/>
+            </div>
+            ): ''
+          }
+          
         </div>
-        <Button>
+        <Button className="text-white">
           <Plus className="text-white" size={20} />
           Criar novo projeto
         </Button>
       </div>
 
-      <div className="w-full border border-gray-200 rounded-md p-10 mt-10">
+      <div className="bg-white w-full border border-gray-200 rounded-md p-10 mt-10">
         <h1 className="flex gap-2 text-xl font-bold">
           Total:<p className="text-gray-400">{user.projects.length}</p>
         </h1>
