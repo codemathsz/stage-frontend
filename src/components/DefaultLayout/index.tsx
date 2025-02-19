@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { Header } from "../Header";
 import { SideBar } from "../SideBar";
 
+
 export function DefaultLayout() {
   return (
     <div className="flex h-screen bg-background">

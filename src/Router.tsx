@@ -7,7 +7,17 @@ import { useAuth } from "./context/AuthContext";
 import { useEffect } from "react";
 import { ListProjects } from "./pages/ListProjects/ListProjects";
 import { DefaultLayout } from "./components/DefaultLayout";
+
+export const routes = [
+  { path: '/projects', element: <ListProjects />, title: 'Projetos' },
+  { path: '/project:id', element: <Project />, title: 'Editar Projeto' },
+  { path: '/project', element: <Project />, title: 'Criar Projeto' },
+  { path: '/home', element: <Home />, title: 'Inicio' },
+];
 export function Router() {
+
+  
+
   function RootRedirect() {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
@@ -24,15 +34,12 @@ export function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<DefaultLayout />}>
         <Route path="/" element={<RootRedirect />} />
-
-        <Route path="/projects" element={<ListProjects />} />
-
         <Route element={<ProtectedRoute />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/project/:id?" element={<Project />} />
+          {routes.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
+          ))}
         </Route>
       </Route>
-
       <Route path="*" element={<div>404 - Página não encontrada</div>} />
     </Routes>
   );
