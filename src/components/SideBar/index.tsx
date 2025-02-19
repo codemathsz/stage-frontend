@@ -25,7 +25,7 @@ export function SideBar() {
   const location = useLocation();
 
   return (
-    <nav className="bg-white flex flex-col w-80 border-r border-gray-200 px-6 shadow-md">
+    <nav className="bg-white flex flex-col w-72 border-r border-gray-200 px-6 shadow-md">
       <div className="flex justify-center items-center mx-auto w-32 h-32  mt-10 bg-transparent rounded-lg"> 
        {/*  <img
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/STG_ICON_LOW-001-MpE6LuBK5SE8fiPQ69rXmRfLqi8Bqe.png"
