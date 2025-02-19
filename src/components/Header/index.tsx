@@ -18,9 +18,9 @@ export function Header() {
   }, [location]);
 
   return (
-    <header className="flex justify-center items-center px-6 w-full h-20 border-b-2 ">
-      <div className="w-full flex justify-between">
-        <div> <h1 className="font-poppins text-[1.75rem] font-bold text-primary" >{title}</h1></div>
+    <header className="flex justify-center items-center px-6 w-full h-20 border-b-2 mt-2 ">
+      <div className="w-full flex justify-between pt-2">
+        <div><h1 className="font-poppins text-[1.75rem] font-bold text-primary" >{title}</h1></div>
         <div className="flex gap-4">
           <img
             src="https://t3.ftcdn.net/jpg/05/70/71/06/360_F_570710660_Jana1ujcJyQTiT2rIzvfmyXzXamVcby8.jpg"
