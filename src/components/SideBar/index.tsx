@@ -27,12 +27,12 @@ export function SideBar() {
   return (
     <nav className="bg-white flex flex-col w-72 border-r border-gray-200 px-6 shadow-md">
       <div className="flex justify-center items-center mx-auto w-32 h-32 bg-transparent rounded-lg"> 
-       {/*  <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/STG_ICON_LOW-001-MpE6LuBK5SE8fiPQ69rXmRfLqi8Bqe.png"
+        <img
+          src="https://static.vecteezy.com/system/resources/previews/029/145/939/large_2x/stg-letter-logo-design-inspiration-for-a-unique-identity-modern-elegance-and-creative-design-watermark-your-success-with-the-striking-this-logo-vector.jpg"
           alt="STG Logo"
-          className="max-w-24 h-auto mx-auto object-contain"
-        /> */}
-        <span className="font-poppins text-primary text-3xl font-bold">LOGO</span>
+          className="max-w-44 h-auto mx-auto object-contain"
+        /> 
+     
       </div>
       <div className="w-full flex flex-col gap-3 mt-12 ">
         {items.map((item, _index) => (

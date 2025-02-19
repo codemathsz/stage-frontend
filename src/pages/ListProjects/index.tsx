@@ -1,4 +1,3 @@
-import LoadingSpinner from "@/components/spinner";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -8,41 +7,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetUser } from "@/hooks/useGetUser";
 import { formatDate } from "@/lib/utils";
 import { RootState } from "@/store/store";
 import { User } from "@/types";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-import {
-  MagnifyingGlass,
-  Plus,
-  DotsThree,
-  CaretDown,
-  Trash,
-  Pencil,
-  Clipboard,
-  X,
-} from "phosphor-react";
+import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
 export function ListProjects() {
-  const getUser = useGetUser();
+
   const [filter, setFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
-  useEffect(() => {
-    const handleUpdateUserData = async () => {
-      const token = Cookies.get("token");
-      if (token) await getUser(token);
-    };
-    handleUpdateUserData();
-  }, [getUser]);
-
-  if (!user) {
-    return <LoadingSpinner />;
-  }
+  console.log(user)
 
   const filteredProjects = user.projects
     .map((project) => ({
@@ -61,6 +39,8 @@ export function ListProjects() {
       )
     );
 
+    console.log(filteredProjects)
+
   return (
     <div className="bg-transparent">
       <div className="bg-white flex justify-between items-center px-6 mt-8 h-20 rounded-lg shadow-sm">
@@ -71,13 +51,17 @@ export function ListProjects() {
             placeholder="Digite o nome ou código do projeto"
             className="bg-white px-4 py-6 border font-poppins font-medium border-secondary border-opacity-25 w-full focus:!outline-none focus:ring-0 focus:ring-transparent placeholder:font-medium placeholder:font-poppins"
           />
-          {filter ?(
-            <div className="w-12 h-12 p-2 flex items-center justify-center border rounded-lg border-secondary border-opacity-25 cursor-pointer" title="limpar" onClick={() => setFilter('')}>
-              <X size={32} className="text-secondary"/>
+          {filter ? (
+            <div
+              className="w-12 h-12 p-2 flex items-center justify-center border rounded-lg border-secondary border-opacity-25 cursor-pointer"
+              title="limpar"
+              onClick={() => setFilter("")}
+            >
+              <X size={32} className="text-secondary" />
             </div>
-            ): ''
-          }
-          
+          ) : (
+            ""
+          )}
         </div>
         <Button className="text-white">
           <Plus className="text-white" size={20} />
@@ -126,7 +110,7 @@ export function ListProjects() {
                       />
                       <div className="flex flex-col">
                         <p className="text-sm font-semibold">
-                          {latestVersion.title}
+                          {latestVersion?.title}
                         </p>
                         <p>{project.cod}</p>
                       </div>
@@ -137,27 +121,9 @@ export function ListProjects() {
                     {latestVersion?.startDate &&
                       formatDate(latestVersion?.startDate.toString())}
                   </TableCell>
-                  <TableCell>{latestVersion.phases.length}</TableCell>
+                  <TableCell>{latestVersion?.phases?.length}</TableCell>
                   <TableCell className="cursor-pointer">
-                    <DropdownMenu.Root>
-                      <DropdownMenu.Trigger>
-                        <DotsThree size={20} />
-                      </DropdownMenu.Trigger>
-                      <DropdownMenu.Content className="flex flex-col gap-1.5 bg-black text-white rounded-md p-4 w-40">
-                        <DropdownMenu.Item className="flex justify-between gap-3">
-                          Ver fases
-                          <Clipboard className="text-gray-00" size={20} />
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item className="flex justify-between gap-3">
-                          Editar <Pencil size={20} />
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Separator />
-                        <DropdownMenu.Item className="flex justify-between gap-3">
-                          Deletar <Trash className="text-red-500" size={20} />
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Separator />
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Root>
+                    <DropdownWithModal project={project} />
                   </TableCell>
                 </TableRow>
               );
