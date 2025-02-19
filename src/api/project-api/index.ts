@@ -47,5 +47,5 @@ export const getProjectByUserId = async (userId: string) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  return response;
+  return response.data;
 };

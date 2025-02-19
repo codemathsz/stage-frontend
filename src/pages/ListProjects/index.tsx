@@ -10,20 +10,18 @@ import {
 import { formatDate } from "@/lib/utils";
 import { RootState } from "@/store/store";
 import { User } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
+import { useProject } from "@/context/ProjectContext";
 export function ListProjects() {
-
+  const { projects, getProjects} = useProject()
   const [filter, setFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
-  console.log(user)
-
-  const filteredProjects = user.projects
-    .map((project) => ({
+  const filteredProjects = projects?.map((project) => ({
       ...project,
       latestVersion: project.versions.reduce(
         (latest, current) =>
@@ -39,7 +37,9 @@ export function ListProjects() {
       )
     );
 
-    console.log(filteredProjects)
+  useEffect(() =>{
+    getProjects(user.id)
+  },[user])
 
   return (
     <div className="bg-transparent">
@@ -71,7 +71,7 @@ export function ListProjects() {
 
       <div className="bg-white w-full border border-gray-200 rounded-md p-10 mt-10">
         <h1 className="flex gap-2 text-xl font-bold">
-          Total:<p className="text-gray-400">{user.projects.length}</p>
+          Total:<p className="text-gray-400">{projects?.length}</p>
         </h1>
 
         <Table className="mt-10">
@@ -87,9 +87,9 @@ export function ListProjects() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(filteredProjects.length > 0
+            {(filteredProjects && filteredProjects?.length > 0
               ? filteredProjects
-              : user.projects
+              : projects ?? []
             ).map((project) => {
               const latestVersion = project.versions.reduce(
                 (latest, current) => {
