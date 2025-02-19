@@ -5,7 +5,7 @@ import Home from "./pages/Home";
 import Project from "./pages/Project";
 import { useAuth } from "./context/AuthContext";
 import { useEffect } from "react";
-import { ListProjects } from "./pages/ListProjects/ListProjects";
+import { ListProjects } from "./pages/ListProjects";
 import { DefaultLayout } from "./components/DefaultLayout";
 
 export const routes = [
