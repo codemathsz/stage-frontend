@@ -3,8 +3,11 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Pencil, Trash } from "lucide-react";
-import { Project } from "@/types";
+import { Project, User } from "@/types";
 import { API } from "@/lib/axios";
+import { useProject } from "@/context/ProjectContext";
+import { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
 
 interface AlertDialogProps {
   setOpenDropdown: React.Dispatch<React.SetStateAction<boolean>>;
@@ -13,9 +16,12 @@ interface AlertDialogProps {
 
 const AlertDialogDelete = ({ setOpenDropdown, project }: AlertDialogProps) => {
 
+  const { getProjects } = useProject()
+  const user = useSelector((state: RootState) => state.user.userData) as User;
+
   async function handleDelete() {
-    const response = await API.delete(`/api/project/${project.id}`);
-    console.log(response.data);
+    await API.delete(`/api/project/${project.id}`);
+    await getProjects(user.id)
   }
 
   const latestVersion = project.versions.reduce((latest, current) => {
