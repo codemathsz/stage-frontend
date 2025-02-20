@@ -16,12 +16,18 @@ import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
 import { useProject } from "@/context/ProjectContext";
+import { useGetProjectByUserId } from "@/hooks/useGetProjectByIdUser";
+
 export function ListProjects() {
-  const { projects, getProjects} = useProject()
+  const { projects, getProjects } = useProject();
   const [filter, setFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
+  const { data } = useGetProjectByUserId(user.id);
 
-  const filteredProjects = projects?.map((project) => ({
+  console.log(data);
+
+  const filteredProjects = projects
+    ?.map((project) => ({
       ...project,
       latestVersion: project.versions.reduce(
         (latest, current) =>
@@ -37,9 +43,9 @@ export function ListProjects() {
       )
     );
 
-  useEffect(() =>{
-    getProjects(user.id)
-  },[user])
+  useEffect(() => {
+    getProjects(user.id);
+  }, [user]);
 
   return (
     <div className="bg-transparent">
