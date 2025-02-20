@@ -32,8 +32,6 @@ export default function Home() {
     return <LoadingSpinner />;
   }
 
-
-
   useEffect(() => {
     const handleUpdateUserData = async () => {
       const token = Cookies.get("token");

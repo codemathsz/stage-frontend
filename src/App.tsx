@@ -3,8 +3,9 @@ import "./App.css";
 import "react-day-picker/style.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { Router } from "./Router";
-import { ProjectProvider } from "./context/ProjectContext";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 export function App() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -14,14 +15,13 @@ export function App() {
     },
   });
   return (
-    <AuthProvider>
-      <ProjectProvider>
+    <BrowserRouter>
+      <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <Router />
-          </BrowserRouter>
+          <Router />
         </QueryClientProvider>
-      </ProjectProvider>
-    </AuthProvider>
+      </AuthProvider>
+      <Toaster richColors closeButton />
+    </BrowserRouter>
   );
 }

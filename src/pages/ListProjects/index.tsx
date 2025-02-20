@@ -10,21 +10,18 @@ import {
 import { formatDate } from "@/lib/utils";
 import { RootState } from "@/store/store";
 import { User } from "@/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
-import { useProject } from "@/context/ProjectContext";
-import { useGetProjectByUserId } from "@/hooks/useGetProjectByIdUser";
+import { useProject } from "@/hooks/useProjects";
 
 export function ListProjects() {
-  const { projects, getProjects } = useProject();
   const [filter, setFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
-  const { data } = useGetProjectByUserId(user.id);
 
-  console.log(data);
+  const { projects } = useProject(user?.id);
 
   const filteredProjects = projects
     ?.map((project) => ({
@@ -42,10 +39,6 @@ export function ListProjects() {
         text?.toLowerCase().includes(filter.toLowerCase())
       )
     );
-
-  useEffect(() => {
-    getProjects(user.id);
-  }, [user]);
 
   return (
     <div className="bg-transparent">

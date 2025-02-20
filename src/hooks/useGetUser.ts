@@ -9,12 +9,7 @@ export function useGetUser() {
   const getUser = async (token: string) => {
     if (!token) return;
     const decode = jwtDecode(token);
-    const response = await API.get(`/users/${decode.sub}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await API.get(`/users/${decode.sub}`);
     dispatch(setUserData(response.data));
   };
 

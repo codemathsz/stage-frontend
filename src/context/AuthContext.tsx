@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = Cookies.get("token");
@@ -37,13 +39,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (token: string) => {
     Cookies.set("token", token, { expires: 7 });
     setIsAuthenticated(true);
-    window.location.href = "/projects";
+    navigate("/projects");
   };
 
   const logout = () => {
     Cookies.remove("token");
     setIsAuthenticated(false);
-    window.location.href = "/";
+    navigate("/");
   };
 
   return (
