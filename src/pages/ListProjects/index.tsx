@@ -16,12 +16,15 @@ import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
 import { useProject } from "@/hooks/useProjects";
+import { useNavigate } from "react-router-dom";
 
 export function ListProjects() {
-  const [filter, setFilter] = useState("");
+  const [queryFilter, setQueryFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
   const { projects } = useProject(user?.id);
+
+  const navigate = useNavigate();
 
   const filteredProjects = projects
     ?.map((project) => ({
@@ -36,25 +39,29 @@ export function ListProjects() {
     }))
     .filter(({ cod, latestVersion }) =>
       [latestVersion?.title, cod].some((text) =>
-        text?.toLowerCase().includes(filter.toLowerCase())
+        text?.toLowerCase().includes(queryFilter.toLowerCase())
       )
     );
 
+  function handleRedirectToNewProject() {
+    return navigate("/project");
+  }
+
   return (
-    <div className="bg-transparent">
+    <div className="px-4">
       <div className="bg-white flex justify-between items-center px-6 mt-8 h-20 rounded-lg shadow-sm">
         <div className="relative w-full max-w-xl flex items-center gap-4">
           <Input
-            onChange={(event) => setFilter(event.target.value)}
-            value={filter}
+            onChange={(event) => setQueryFilter(event.target.value)}
+            value={queryFilter}
             placeholder="Digite o nome ou código do projeto"
             className="bg-white px-4 py-6 border font-poppins font-medium border-secondary border-opacity-25 w-full focus:!outline-none focus:ring-0 focus:ring-transparent placeholder:font-medium placeholder:font-poppins"
           />
-          {filter ? (
+          {queryFilter ? (
             <div
               className="w-12 h-12 p-2 flex items-center justify-center border rounded-lg border-secondary border-opacity-25 cursor-pointer"
-              title="limpar"
-              onClick={() => setFilter("")}
+              title="Limpar"
+              onClick={() => setQueryFilter("")}
             >
               <X size={32} className="text-secondary" />
             </div>
@@ -62,7 +69,7 @@ export function ListProjects() {
             ""
           )}
         </div>
-        <Button className="text-white">
+        <Button onClick={handleRedirectToNewProject} className="text-white">
           <Plus className="text-white" size={20} />
           Criar novo projeto
         </Button>
