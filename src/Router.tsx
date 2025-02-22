@@ -9,7 +9,7 @@ import { ListProjects } from "./pages/ListProjects";
 import { DefaultLayout } from "./components/DefaultLayout";
 
 export const routes = [
-  { path: '/projects', element: <ListProjects />, title: 'Projetos' },
+ /*  { path: '/projects', element: <ListProjects />, title: 'Projetos' }, */
   { path: '/project:id', element: <Project />, title: 'Editar Projeto' },
   { path: '/project', element: <Project />, title: 'Criar Projeto' },
   { path: '/home', element: <Home />, title: 'Inicio' },
@@ -33,6 +33,7 @@ export function Router() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<DefaultLayout />}>
+      <Route path="/projects" element={<ListProjects />}></Route>
         <Route path="/" element={<RootRedirect />} />
         <Route element={<ProtectedRoute />}>
           {routes.map((route) => (
