@@ -90,11 +90,11 @@ export function SideBar({ isOpen, handleClick }: SideBarProps) {
 }
 
 type LogoutButtonProps = {
-  logout: () => void;
+  logout: VoidFunction;
 };
 
 const LogoutButton = ({ logout }: LogoutButtonProps) => (
-  <div className="absolute bottom-10 w-full flex justify-center px-6">
+  <div className="absolute bottom-10 w-full flex justify-start px-6">
     <button
       onClick={logout}
       className="flex items-center px-4 py-3 text-secondary underline cursor-pointer transition-all duration-300 hover:text-primary"

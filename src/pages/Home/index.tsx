@@ -10,7 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CalendarWidget } from "@/components/calendar-widget";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { User } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { useEffect } from "react";
@@ -19,7 +25,7 @@ import LoadingSpinner from "@/components/spinner";
 import { useGetUser } from "@/hooks/useGetUser";
 import { CarouselComponent } from "@/components/carousel-component";
 
-export default function Home() {
+export function Home() {
   const navigate = useNavigate();
   const getUser = useGetUser();
   const user = useSelector((state: RootState) => state.user.userData) as User;
@@ -42,16 +48,17 @@ export default function Home() {
 
   return (
     <div className=" bg-background">
-     
       <main className="w-11/12 mx-auto max-w-[90rem] flex flex-col gap-16">
         <div className="w-full h-auto max-h-[36rem] mb-8">
-          <CarouselComponent/>
+          <CarouselComponent />
         </div>
         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 mb-8">
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Últimos 5 Projetos</CardTitle>
-              <CardDescription>Acompanhe os projetos mais recentes em andamento</CardDescription>
+              <CardDescription>
+                Acompanhe os projetos mais recentes em andamento
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -97,11 +104,11 @@ export default function Home() {
               </Table>
             </CardContent>
           </Card>
-          </div>
-          <div>
-            <CalendarWidget />
-          </div>
-          </main>
         </div>
+        <div>
+          <CalendarWidget />
+        </div>
+      </main>
+    </div>
   );
 }

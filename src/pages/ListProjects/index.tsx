@@ -16,13 +16,13 @@ import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
 import { useProject } from "@/hooks/useProjects";
-import { useNavigate } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 export function ListProjects() {
   const [queryFilter, setQueryFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
-  const { projects } = useProject(user?.id);
+  const { projects } = useProject(user.id);
+  console.log(projects);
 
   const navigate = useNavigate();
 
@@ -93,47 +93,61 @@ export function ListProjects() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(filteredProjects && filteredProjects?.length > 0
-              ? filteredProjects
-              : projects ?? []
-            ).map((project) => {
-              const latestVersion = project.versions.reduce(
-                (latest, current) => {
-                  return parseFloat(current.version) >
-                    parseFloat(latest.version)
-                    ? current
-                    : latest;
-                },
-                project.versions[0]
-              );
-              return (
-                <TableRow key={project.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2.5">
-                      <img
-                        className="w-12 rounded-full"
-                        src="https://www.diretoriodaarquitetura.com.br/wp-content/uploads/2022/09/estiloNEOCLASSICO2.jpg"
-                      />
-                      <div className="flex flex-col">
-                        <p className="text-sm font-semibold">
-                          {latestVersion?.title}
-                        </p>
-                        <p>{project.cod}</p>
+            {filteredProjects?.length > 0 || projects?.length > 0 ? (
+              (filteredProjects?.length > 0
+                ? filteredProjects
+                : projects ?? []
+              ).map((project) => {
+                const latestVersion = project.versions.reduce(
+                  (latest, current) => {
+                    return parseFloat(current.version) >
+                      parseFloat(latest.version)
+                      ? current
+                      : latest;
+                  },
+                  project.versions[0]
+                );
+
+                return (
+                  <TableRow key={project.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          className="w-12 rounded-full"
+                          src="https://www.diretoriodaarquitetura.com.br/wp-content/uploads/2022/09/estiloNEOCLASSICO2.jpg"
+                          alt="Projeto"
+                        />
+                        <div className="flex flex-col">
+                          <p className="text-sm font-semibold">
+                            {latestVersion?.title}
+                          </p>
+                          <p>{project.cod}</p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{latestVersion?.address}</TableCell>
-                  <TableCell>
-                    {latestVersion?.startDate &&
-                      formatDate(latestVersion?.startDate.toString())}
-                  </TableCell>
-                  <TableCell>{latestVersion?.phases?.length}</TableCell>
-                  <TableCell className="cursor-pointer">
-                    <DropdownWithModal project={project} />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    </TableCell>
+                    <TableCell>{latestVersion?.address}</TableCell>
+                    <TableCell>
+                      {latestVersion?.startDate &&
+                        formatDate(latestVersion.startDate.toString())}
+                    </TableCell>
+                    <TableCell>{latestVersion?.phases?.length}</TableCell>
+                    <TableCell className="cursor-pointer">
+                      <DropdownWithModal project={project} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow className="text-center">
+
+                <TableCell colSpan={5} className="text-center py-4">
+                  <div className="flex flex-col mt-10">
+                  <span>Nenhum projeto encontrado.</span>
+                  <Link className="underline font-bold" to="/project">Criar novo projeto</Link>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

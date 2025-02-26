@@ -26,7 +26,7 @@ const userAuth = z.object({
 
 export type NewUserAuth = z.infer<typeof userAuth>;
 
-const Login = () => {
+export function Login() {
   const getUser = useGetUser();
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -107,6 +107,4 @@ const Login = () => {
       </Card>
     </div>
   );
-};
-
-export default Login;
+}
