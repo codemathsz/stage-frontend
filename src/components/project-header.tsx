@@ -12,6 +12,8 @@ interface ProjectHeaderProps {
 }
 
 export function ProjectHeader({project, projectData, onUpdate, onUpdateProject }: ProjectHeaderProps) {
+
+  console.log(projectData)
   const [isEditing, setIsEditing] = useState(false)
 
   const handleChangeProject = (field: keyof Project, value: string | Date) => {
@@ -129,10 +131,10 @@ export function ProjectHeader({project, projectData, onUpdate, onUpdateProject }
       </div>
 
       {/* Footer with copyright and website */}
-      <div className="flex justify-between items-center py-4 border-t border-gray-200">
+      <footer className="flex justify-between items-center py-4 border-t border-gray-200">
         <div className="text-sm text-gray-500">@2025</div>
         <div className="text-sm text-gray-500">WWW.STAGEAEC.COM.BR</div>
-      </div>
+      </footer>
     </div>
   )
 }

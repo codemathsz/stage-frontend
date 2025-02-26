@@ -10,18 +10,24 @@ import {
 import { formatDate } from "@/lib/utils";
 import { RootState } from "@/store/store";
 import { User } from "@/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
-import { useProject } from "@/context/ProjectContext";
+import { useProject } from "@/hooks/useProjects";
+import { Link, useNavigate } from "react-router-dom";
 export function ListProjects() {
-  const { projects, getProjects} = useProject()
-  const [filter, setFilter] = useState("");
+  const [queryFilter, setQueryFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
-  const filteredProjects = projects?.map((project) => ({
+  const { projects } = useProject(user.id);
+  console.log(projects);
+
+  const navigate = useNavigate();
+
+  const filteredProjects = projects
+    ?.map((project) => ({
       ...project,
       latestVersion: project.versions.reduce(
         (latest, current) =>
@@ -33,29 +39,29 @@ export function ListProjects() {
     }))
     .filter(({ cod, latestVersion }) =>
       [latestVersion?.title, cod].some((text) =>
-        text?.toLowerCase().includes(filter.toLowerCase())
+        text?.toLowerCase().includes(queryFilter.toLowerCase())
       )
     );
 
-  useEffect(() =>{
-    getProjects(user.id)
-  },[user])
+  function handleRedirectToNewProject() {
+    return navigate("/project");
+  }
 
   return (
-    <div className="bg-transparent">
+    <div className="px-4">
       <div className="bg-white flex justify-between items-center px-6 mt-8 h-20 rounded-lg shadow-sm">
         <div className="relative w-full max-w-xl flex items-center gap-4">
           <Input
-            onChange={(event) => setFilter(event.target.value)}
-            value={filter}
+            onChange={(event) => setQueryFilter(event.target.value)}
+            value={queryFilter}
             placeholder="Digite o nome ou código do projeto"
             className="bg-white px-4 py-6 border font-poppins font-medium border-secondary border-opacity-25 w-full focus:!outline-none focus:ring-0 focus:ring-transparent placeholder:font-medium placeholder:font-poppins"
           />
-          {filter ? (
+          {queryFilter ? (
             <div
               className="w-12 h-12 p-2 flex items-center justify-center border rounded-lg border-secondary border-opacity-25 cursor-pointer"
-              title="limpar"
-              onClick={() => setFilter("")}
+              title="Limpar"
+              onClick={() => setQueryFilter("")}
             >
               <X size={32} className="text-secondary" />
             </div>
@@ -63,7 +69,7 @@ export function ListProjects() {
             ""
           )}
         </div>
-        <Button className="text-white">
+        <Button onClick={handleRedirectToNewProject} className="text-white">
           <Plus className="text-white" size={20} />
           Criar novo projeto
         </Button>
@@ -87,47 +93,61 @@ export function ListProjects() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(filteredProjects && filteredProjects?.length > 0
-              ? filteredProjects
-              : projects ?? []
-            ).map((project) => {
-              const latestVersion = project.versions.reduce(
-                (latest, current) => {
-                  return parseFloat(current.version) >
-                    parseFloat(latest.version)
-                    ? current
-                    : latest;
-                },
-                project.versions[0]
-              );
-              return (
-                <TableRow key={project.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2.5">
-                      <img
-                        className="w-12 rounded-full"
-                        src="https://www.diretoriodaarquitetura.com.br/wp-content/uploads/2022/09/estiloNEOCLASSICO2.jpg"
-                      />
-                      <div className="flex flex-col">
-                        <p className="text-sm font-semibold">
-                          {latestVersion?.title}
-                        </p>
-                        <p>{project.cod}</p>
+            {filteredProjects?.length > 0 || projects?.length > 0 ? (
+              (filteredProjects?.length > 0
+                ? filteredProjects
+                : projects ?? []
+              ).map((project) => {
+                const latestVersion = project.versions.reduce(
+                  (latest, current) => {
+                    return parseFloat(current.version) >
+                      parseFloat(latest.version)
+                      ? current
+                      : latest;
+                  },
+                  project.versions[0]
+                );
+
+                return (
+                  <TableRow key={project.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          className="w-12 rounded-full"
+                          src="https://www.diretoriodaarquitetura.com.br/wp-content/uploads/2022/09/estiloNEOCLASSICO2.jpg"
+                          alt="Projeto"
+                        />
+                        <div className="flex flex-col">
+                          <p className="text-sm font-semibold">
+                            {latestVersion?.title}
+                          </p>
+                          <p>{project.cod}</p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{latestVersion?.address}</TableCell>
-                  <TableCell>
-                    {latestVersion?.startDate &&
-                      formatDate(latestVersion?.startDate.toString())}
-                  </TableCell>
-                  <TableCell>{latestVersion?.phases?.length}</TableCell>
-                  <TableCell className="cursor-pointer">
-                    <DropdownWithModal project={project} />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    </TableCell>
+                    <TableCell>{latestVersion?.address}</TableCell>
+                    <TableCell>
+                      {latestVersion?.startDate &&
+                        formatDate(latestVersion.startDate.toString())}
+                    </TableCell>
+                    <TableCell>{latestVersion?.phases?.length}</TableCell>
+                    <TableCell className="cursor-pointer">
+                      <DropdownWithModal project={project} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow className="text-center">
+
+                <TableCell colSpan={5} className="text-center py-4">
+                  <div className="flex flex-col mt-10">
+                  <span>Nenhum projeto encontrado.</span>
+                  <Link className="underline font-bold" to="/project">Criar novo projeto</Link>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

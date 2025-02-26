@@ -1,23 +1,20 @@
 import { Route, Routes, useNavigate } from "react-router-dom";
-import Login from "./pages/Login";
-import ProtectedRoute from "./route/ProtectedRoute";
-import Home from "./pages/Home";
-import Project from "./pages/Project";
+import { Login } from "./pages/Login";
+import { ProtectedRoute } from "./route/ProtectedRoute";
+import { Home } from "./pages/Home";
+import { Project } from "./pages/Project";
 import { useAuth } from "./context/AuthContext";
 import { useEffect } from "react";
 import { ListProjects } from "./pages/ListProjects";
 import { DefaultLayout } from "./components/DefaultLayout";
 
 export const routes = [
-  { path: '/projects', element: <ListProjects />, title: 'Projetos' },
-  { path: '/project:id', element: <Project />, title: 'Editar Projeto' },
-  { path: '/project', element: <Project />, title: 'Criar Projeto' },
-  { path: '/home', element: <Home />, title: 'Inicio' },
+  { path: "/projects", element: <ListProjects />, title: "Projetos" },
+  { path: "/project:id", element: <Project />, title: "Editar Projeto" },
+  { path: "/project", element: <Project />, title: "Criar Projeto" },
+  { path: "/home", element: <Home />, title: "Inicio" },
 ];
 export function Router() {
-
-  
-
   function RootRedirect() {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();

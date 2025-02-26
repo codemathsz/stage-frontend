@@ -51,7 +51,6 @@ export interface Milestone {
 export enum PhaseType {
   PROJECT = 'PROJECT',
   CONSTRUCTION = 'CONSTRUCTION',
-  // Adicione outros tipos conforme necessário
 }
 
 export interface User {

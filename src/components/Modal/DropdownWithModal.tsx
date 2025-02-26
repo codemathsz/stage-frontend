@@ -2,12 +2,12 @@ import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Pencil, Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { Project, User } from "@/types";
-import { API } from "@/lib/axios";
-import { useProject } from "@/context/ProjectContext";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
+import { useProject } from "@/hooks/useProjects";
+import { DotsThree } from "phosphor-react";
 
 interface AlertDialogProps {
   setOpenDropdown: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,14 +15,8 @@ interface AlertDialogProps {
 }
 
 const AlertDialogDelete = ({ setOpenDropdown, project }: AlertDialogProps) => {
-
-  const { getProjects } = useProject()
   const user = useSelector((state: RootState) => state.user.userData) as User;
-
-  async function handleDelete() {
-    await API.delete(`/api/project/${project.id}`);
-    await getProjects(user.id)
-  }
+  const { handleDeleteProject } = useProject(user.id);
 
   const latestVersion = project.versions.reduce((latest, current) => {
     return parseFloat(current.version) > parseFloat(latest.version)
@@ -43,7 +37,7 @@ const AlertDialogDelete = ({ setOpenDropdown, project }: AlertDialogProps) => {
         </AlertDialog.Description>
         <div className="flex justify-end gap-2 mt-4">
           <AlertDialog.Cancel asChild>
-            <Button variant="outline">Cancelar</Button>
+            <Button variant="ghost" className="border border-black">Cancelar</Button>
           </AlertDialog.Cancel>
           <AlertDialog.Action
             asChild
@@ -52,7 +46,7 @@ const AlertDialogDelete = ({ setOpenDropdown, project }: AlertDialogProps) => {
             }}
           >
             <Button
-              onClick={handleDelete}
+              onClick={() => handleDeleteProject(project.id)}
               variant="destructive"
               className="bg-red-500 text-white"
             >
@@ -77,7 +71,7 @@ export function DropdownWithModal({ project }: DropdownWithModalProps) {
     <DropdownMenu.Root open={openDropdown} onOpenChange={setOpenDropdown}>
       <DropdownMenu.Trigger asChild>
         <Button variant="ghost">
-          <MoreVertical size={20} />
+          <DotsThree size={24} />
         </Button>
       </DropdownMenu.Trigger>
 

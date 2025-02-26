@@ -1,16 +1,13 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import LoadingSpinner from '@/components/spinner';
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import LoadingSpinner from "@/components/spinner";
 
-const ProtectedRoute: React.FC = () => {
+export function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <LoadingSpinner/>;
+    return <LoadingSpinner />;
   }
 
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
-};
-
-export default ProtectedRoute;
+}
