@@ -19,6 +19,7 @@ export interface ProjectVersion {
   version: string;
   title: string;
   address: string;
+  cep:string;
   district: string;
   city: string;
   state: string;

@@ -22,7 +22,7 @@ export function ListProjects() {
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
   const { projects } = useProject(user?.id);
-  console.log(projects);
+
 
   const navigate = useNavigate();
 

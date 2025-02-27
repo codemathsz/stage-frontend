@@ -33,6 +33,7 @@ export function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<DefaultLayout />}>
         <Route path="/" element={<RootRedirect />} />
+
         <Route element={<ProtectedRoute />}>
           {routes.map((route) => (
             <Route key={route.path} path={route.path} element={route.element} />
