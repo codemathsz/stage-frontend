@@ -93,9 +93,9 @@ export function ListProjects() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProjects?.length > 0 || projects?.length > 0 ? (
-              (filteredProjects?.length > 0
-                ? filteredProjects 
+            {filteredProjects && filteredProjects?.length > 0 || projects && projects?.length > 0 ? (
+              (filteredProjects && filteredProjects?.length > 0
+                ? filteredProjects
                 : projects ?? []
               ).map((project) => {
                 const latestVersion = project.versions.reduce(

@@ -2,7 +2,7 @@ import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, Calendar } from "lucide-react";
 import { Project, User } from "@/types";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
@@ -65,11 +65,18 @@ interface DropdownWithModalProps {
 }
 
 export function DropdownWithModal({ project }: DropdownWithModalProps) {
+  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(false);
-  const navigate = useNavigate()
+
   function handleGoToEditProject(id: string) {
+    if(!id) return
     navigate(`/project/${id}`);
+  }
+
+  const handleMeetPhasesProject = () =>{
+    if(!project.id) return
+    return navigate(`/meeting/${project.id}`)
   }
 
   return (
@@ -87,6 +94,14 @@ export function DropdownWithModal({ project }: DropdownWithModalProps) {
         <DropdownMenu.Item onClick={() => handleGoToEditProject(project.id)} className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200">
           <Pencil size={18} />
           Editar
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Item 
+          className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200"
+          onClick={() => handleMeetPhasesProject()}
+        >
+          <Calendar size={18} />
+          Meet
         </DropdownMenu.Item>
 
         <DropdownMenu.Item

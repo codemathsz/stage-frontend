@@ -7,12 +7,14 @@ import { useAuth } from "./context/AuthContext";
 import { useEffect } from "react";
 import { ListProjects } from "./pages/ListProjects";
 import { DefaultLayout } from "./components/DefaultLayout";
+import { Meet } from "./pages/Meet";
 
 export const routes = [
   { path: "/projects", element: <ListProjects />, title: "Projetos" },
   { path: "/project/:id", element: <Project />, title: "Editar Projeto" },
   { path: "/project", element: <Project />, title: "Criar Projeto" },
   { path: "/home", element: <Home />, title: "Inicio" },
+  { path: "/meeting/:id", element: <Meet />, title: "Reunião das etapas" },
 ];
 export function Router() {
   function RootRedirect() {
