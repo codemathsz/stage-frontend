@@ -325,13 +325,13 @@ export function Project() {
   console.log(currentVersion)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="w-[98%] mx-auto max-h-screen mt-8 overflow-scroll bg-white">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-center mb-4">
           <span className="flex items-center gap-2">
-            <button onClick={handleGoToHome}>
+{/*             <button onClick={handleGoToHome}>
               <ChevronLeft className="h-5 w-5 font-bold" />
-            </button>
+            </button> */}
             <h1 className="text-2xl font-bold">Cronograma do Projeto</h1>
           </span>
           <div className="flex gap-2">

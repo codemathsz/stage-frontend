@@ -70,7 +70,7 @@ export function DropdownWithModal({ project }: DropdownWithModalProps) {
   const [openDropdown, setOpenDropdown] = useState(false);
 
   function handleGoToEditProject(id: string) {
-    if(id) return
+    if(!id) return
     navigate(`/project/${id}`);
   }
 
