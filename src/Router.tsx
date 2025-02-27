@@ -10,7 +10,7 @@ import { DefaultLayout } from "./components/DefaultLayout";
 
 export const routes = [
   { path: "/projects", element: <ListProjects />, title: "Projetos" },
-  { path: "/project:id", element: <Project />, title: "Editar Projeto" },
+  { path: "/project/:id", element: <Project />, title: "Editar Projeto" },
   { path: "/project", element: <Project />, title: "Criar Projeto" },
   { path: "/home", element: <Home />, title: "Inicio" },
 ];
@@ -31,6 +31,7 @@ export function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<DefaultLayout />}>
         <Route path="/" element={<RootRedirect />} />
+
         <Route element={<ProtectedRoute />}>
           {routes.map((route) => (
             <Route key={route.path} path={route.path} element={route.element} />

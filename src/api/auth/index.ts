@@ -1,6 +1,6 @@
 import { API } from "@/lib/axios";
 
-interface IAuth{
+interface IAuth {
   email: string
   password: string
 }
