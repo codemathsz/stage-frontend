@@ -26,13 +26,6 @@ export function Meet(){
       title: 'Reunião levantamento',
       objective: 'Estratégia'
     },
-    {
-      cod: 'LV01',
-      status: 'Aprovada',
-      meetingDate: '18/02/2025, 10:00',
-      title: 'Reunião levantamento',
-      objective: 'Estratégia'
-    },
   ]
   const getlatestVersionProject = (versions: ProjectVersion[]): ProjectVersion | null => {
     if (versions.length === 0) return null;
