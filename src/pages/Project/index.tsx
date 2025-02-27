@@ -29,11 +29,28 @@ import LoadingSpinner from "@/components/spinner";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
 import { createMilestone } from "@/api/milestone-api";
-
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import axios from "axios";
 interface IVersion {
   id: string;
   version: string;
 }
+
+const newProject = z.object({
+  title: z.string().min(1, "Informe o nome do projeto"),
+  cep: z.string().min(7, "Informe o CEP"),
+  street: z.string().min(1, "Informe a rua"),
+  number: z.string().min(1, "Informe o número"),
+  address: z.string().min(1, "Informe o endereço"),
+  district: z.string().min(1, "Informe o bairro"),
+  city: z.string().min(1, "Informe a cidade"),
+  state: z.string().min(1, "Informe a UF"),
+  cod: z.string().min(4, "Informe o codigo"),
+  startDate: z.date(),
+});
+
+type NewProjectFormType = z.infer<typeof newProject>;
 
 export function Project() {
   const { id } = useParams();
@@ -47,6 +64,9 @@ export function Project() {
   );
   const [constructionStartDate, setConstructionStartDate] = useState<string>();
   const user = useSelector((state: RootState) => state.user.userData) as User;
+
+  const { register, handleSubmit, setValue, watch } =
+    useForm<NewProjectFormType>();
 
   const findLatestVersion = (
     versions: ProjectVersion[]
@@ -78,6 +98,29 @@ export function Project() {
     };
     getProject();
   }, [id, user]);
+
+  const cep = watch("cep");
+
+  useEffect(() => {
+    if (cep?.length >= 7) {
+      axios
+        .get(`https://viacep.com.br/ws/${cep}/json/`)
+        .then((response) => {
+          const data = response.data;
+          if (!data.erro) {
+            setValue("address", data.logradouro || "");
+            setValue("district", data.bairro || "");
+            setValue("city", data.localidade || "");
+            setValue("state", data.uf || "");
+          } else {
+            alert("CEP não encontrado.");
+          }
+        })
+        .catch((error) => {
+          console.error("Erro ao fazer a requisição:", error.message);
+        });
+    }
+  }, [cep, setValue]);
 
   const handleUpdatedData = (project: Project) => {
     setProject(project);
@@ -175,6 +218,7 @@ export function Project() {
   );
 
   const saveConfigurations = async () => {
+    console.log(project);
     if (!project) return;
 
     let projectId = project.id;
@@ -267,6 +311,12 @@ export function Project() {
   if (lastProjectPhaseEndDate && !constructionStartDate) {
     setConstructionStartDate(lastProjectPhaseEndDate);
   }
+
+ async function onSubmit(data: NewProjectFormType) {
+    await createProject(data)
+  }
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
@@ -281,7 +331,8 @@ export function Project() {
             <Button
               onClick={saveConfigurations}
               className="flex items-center text-white gap-2 disabled:opacity-80 disabled:cursor-not-allowed"
-              disabled={!hasChanges}
+              form="registerProject"
+              type="submit"
             >
               <Save size={20} />
               Salvar Configurações
@@ -303,12 +354,72 @@ export function Project() {
           </div>
         </div>
 
-        <ProjectHeader
-          project={project}
-          projectData={currentVersion}
-          onUpdate={handleUpdate}
-          onUpdateProject={handleProject}
-        />
+        <div className="mb-8">
+          <div className="flex gap-8 mb-6">
+            <div className="w-[20%] flex flex-col items-start">
+              <div className="relative w-32 h-32 mb-4 bg-black rounded-lg">
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/STG_ICON_LOW-001-MpE6LuBK5SE8fiPQ69rXmRfLqi8Bqe.png"
+                  alt="STG Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+
+            <form
+              id="registerProject"
+              onSubmit={handleSubmit(onSubmit)}
+              className="grid grid-cols-5 gap-2"
+            >
+              <Input
+                {...register("title")}
+                placeholder="Nome"
+                className="col-span-3"
+              />
+              <Input
+                {...register("cod")}
+                placeholder="Código"
+                className="col-span-2"
+              />
+              <Input
+                {...register("cep")}
+                placeholder="CEP"
+                className="col-span-2"
+              />
+              <Input
+                disabled
+                {...register("address")}
+                placeholder="Rua"
+                className="col-span-3"
+              />
+              <Input
+                disabled
+                {...register("district")}
+                placeholder="BAIRRO"
+                className="col-span-1"
+              />
+              <Input
+                disabled
+                {...register("city")}
+                placeholder="CIDADE"
+                className="col-span-2"
+              />
+              <Input
+                disabled
+                {...register("state")}
+                placeholder="UF"
+                className="col-span-1"
+              />
+
+              <Input placeholder="Data" id="start-date" type="date" />
+            </form>
+          </div>
+
+          <footer className="flex justify-between items-center py-4 border-t border-gray-200">
+            <div className="text-sm text-gray-500">@2025</div>
+            <div className="text-sm text-gray-500">WWW.STAGEAEC.COM.BR</div>
+          </footer>
+        </div>
 
         <div className="mt-12 mb-8 border-b pb-4">
           <div className="flex justify-between items-center">
