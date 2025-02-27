@@ -31,6 +31,7 @@ import { createMilestone } from "@/api/milestone-api";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
+import { zodResolver } from "@hookform/resolvers/zod";
 interface IVersion {
   id: string;
   version: string;
@@ -38,7 +39,7 @@ interface IVersion {
 
 const newProject = z.object({
   title: z.string().min(1, "Informe o nome do projeto"),
-  cep: z.string().min(7, "Informe o CEP"),
+  cep: z.string().min(8, "Informe o CEP"),
   street: z.string().min(1, "Informe a rua"),
   number: z.string().min(1, "Informe o número"),
   address: z.string().min(1, "Informe o endereço"),
@@ -53,7 +54,7 @@ type NewProjectFormType = z.infer<typeof newProject>;
 
 export function Project() {
   const { id } = useParams();
-  console.log(id)
+  console.log(id);
   const navigate = useNavigate();
   const [versions, setVersions] = useState<IVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<IVersion | null>(null);
@@ -65,14 +66,14 @@ export function Project() {
   );
   const [constructionStartDate, setConstructionStartDate] = useState<string>();
 
-
-  const { register, handleSubmit, setValue, watch } =
+  const { register, handleSubmit, setValue, watch, formState } =
     useForm<NewProjectFormType>({
       defaultValues: {
-        title: currentVersion?.title
-      }
+        title: currentVersion?.title,
+      },
+      resolver: zodResolver(newProject),
+      mode: "onSubmit",
     });
-
 
   const findLatestVersion = (
     versions: ProjectVersion[]
@@ -84,6 +85,9 @@ export function Project() {
         : latest;
     });
   };
+
+  const { isSubmitting, errors } = formState;
+  console.log(isSubmitting);
 
   const handleProjectById = async (id: string) => {
     const response = await getProjectById(id);
@@ -108,7 +112,7 @@ export function Project() {
   const cep = watch("cep");
 
   useEffect(() => {
-    if (cep?.length >= 7) {
+    if (cep?.length >= 8) {
       axios
         .get(`https://viacep.com.br/ws/${cep}/json/`)
         .then((response) => {
@@ -125,22 +129,26 @@ export function Project() {
         .catch((error) => {
           console.error("Erro ao fazer a requisição:", error.message);
         });
+    } else {
+      setValue("address", "");
+      setValue("district", "");
+      setValue("city", "");
+      setValue("state", "");
     }
   }, [cep, setValue]);
 
   const handleUpdatedData = (project: Project) => {
-    console.log(project)
     setProject(project);
     setInitialProject(project);
     const latestVersion = findLatestVersion(project?.versions);
     if (latestVersion) {
-      setValue("title", latestVersion?.title)
-      setValue("cep", latestVersion?.cep)
-      setValue("address", latestVersion?.address)
-      setValue("city", latestVersion?.city)
-      setValue("state", latestVersion?.state)
-      setValue("cod", project.cod)
-      setValue("startDate", latestVersion.startDate)
+      setValue("title", latestVersion?.title);
+      setValue("cep", latestVersion?.cep);
+      setValue("address", latestVersion?.address);
+      setValue("city", latestVersion?.city);
+      setValue("state", latestVersion?.state);
+      setValue("cod", project.cod);
+      setValue("startDate", latestVersion.startDate);
     }
     setCurrentVersion(latestVersion);
     setSelectedVersion(latestVersion);
@@ -183,7 +191,6 @@ export function Project() {
     [project, currentVersion]
   );
 
-
   const addNewPhase = useCallback(
     (phaseType: PhaseType) => {
       if (currentVersion) {
@@ -222,11 +229,10 @@ export function Project() {
   );
 
   const handleCreateAndUpdateProject = async (data: NewProjectFormType) => {
-
     if (!project) return;
 
     let projectId = project.id;
-    project.cod = data.cod
+    project.cod = data.cod;
     if (!project.id && !id) {
       const responseCreateProject = await createProject(project);
       projectId = responseCreateProject.id;
@@ -247,7 +253,7 @@ export function Project() {
         district: data.district,
         state: data.state,
         title: data.title,
-        cep: data.cep
+        cep: data.cep,
       };
 
       const responseCreateVersion = await createVersion(versionData);
@@ -257,7 +263,6 @@ export function Project() {
           const currentPhase = {
             ...phase,
             projectVersionId: responseCreateVersion.id,
-
           };
           const responseCreatePhase = await createPhase(currentPhase);
 
@@ -299,7 +304,6 @@ export function Project() {
     return startDate.toISOString().split("T")[0];
   };
 
-
   const projectPhases = currentVersion?.phases?.filter(
     (phase: ProjectPhase) => phase.phaseType === PhaseType.PROJECT
   );
@@ -322,8 +326,6 @@ export function Project() {
     setConstructionStartDate(lastProjectPhaseEndDate);
   }
 
-  console.log(currentVersion)
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
@@ -336,10 +338,10 @@ export function Project() {
           </span>
           <div className="flex gap-2">
             <Button
-
               className="flex items-center text-white gap-2 disabled:opacity-80 disabled:cursor-not-allowed"
               form="registerProject"
               type="submit"
+              disabled={isSubmitting}
             >
               <Save size={20} />
               Salvar Configurações
@@ -390,9 +392,10 @@ export function Project() {
               />
               <Input
                 {...register("cep")}
-                placeholder="CEP"
+                placeholder="Cep"
                 className="bg-transparent focus:border-none col-span-2"
               />
+
               <Input
                 disabled
                 {...register("address")}
@@ -402,13 +405,13 @@ export function Project() {
               <Input
                 disabled
                 {...register("district")}
-                placeholder="BAIRRO"
+                placeholder="Bairro"
                 className="col-span-1"
               />
               <Input
                 disabled
                 {...register("city")}
-                placeholder="CIDADE"
+                placeholder="Cidade"
                 className="col-span-2"
               />
               <Input
@@ -418,7 +421,13 @@ export function Project() {
                 className="border-none col-span-1"
               />
 
-              <Input className="bg-transparent"   {...register("startDate")} placeholder="Data" id="start-date" type="date" />
+              <Input
+                className="bg-transparent"
+                {...register("startDate")}
+                placeholder="Data"
+                id="start-date"
+                type="date"
+              />
             </form>
           </div>
 
