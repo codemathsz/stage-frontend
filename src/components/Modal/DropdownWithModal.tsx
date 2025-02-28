@@ -2,12 +2,13 @@ import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, Calendar } from "lucide-react";
 import { Project, User } from "@/types";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
 import { useProject } from "@/hooks/useProjects";
 import { DotsThree } from "phosphor-react";
+import { useNavigate } from "react-router-dom";
 
 interface AlertDialogProps {
   setOpenDropdown: React.Dispatch<React.SetStateAction<boolean>>;
@@ -64,8 +65,19 @@ interface DropdownWithModalProps {
 }
 
 export function DropdownWithModal({ project }: DropdownWithModalProps) {
+  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(false);
+
+  function handleGoToEditProject(id: string) {
+    if(!id) return
+    navigate(`/project/${id}`);
+  }
+
+  const handleMeetPhasesProject = () =>{
+    if(!project.id) return
+    return navigate(`/meeting/${project.id}`)
+  }
 
   return (
     <DropdownMenu.Root open={openDropdown} onOpenChange={setOpenDropdown}>
@@ -79,9 +91,17 @@ export function DropdownWithModal({ project }: DropdownWithModalProps) {
         className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md border border-gray-300 p-2 z-50"
         align="end"
       >
-        <DropdownMenu.Item className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200">
+        <DropdownMenu.Item onClick={() => handleGoToEditProject(project.id)} className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200">
           <Pencil size={18} />
           Editar
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Item 
+          className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200"
+          onClick={() => handleMeetPhasesProject()}
+        >
+          <Calendar size={18} />
+          Meet
         </DropdownMenu.Item>
 
         <DropdownMenu.Item

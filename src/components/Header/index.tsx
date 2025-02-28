@@ -19,6 +19,8 @@ export function Header() {
     }
   }, [location]);
 
+  console.log(title)
+
   return (
     <header className="flex justify-center items-center px-6 w-full h-20 border-b-2 mt-2 ">
       <div className="w-full flex justify-between pt-2">

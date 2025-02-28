@@ -21,8 +21,8 @@ export function ListProjects() {
   const [queryFilter, setQueryFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
-  const { projects } = useProject(user.id);
-  console.log(projects);
+  const { projects } = useProject(user?.id);
+
 
   const navigate = useNavigate();
 
@@ -93,8 +93,8 @@ export function ListProjects() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProjects?.length > 0 || projects?.length > 0 ? (
-              (filteredProjects?.length > 0
+            {filteredProjects && filteredProjects?.length > 0 || projects && projects?.length > 0 ? (
+              (filteredProjects && filteredProjects?.length > 0
                 ? filteredProjects
                 : projects ?? []
               ).map((project) => {
