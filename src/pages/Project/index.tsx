@@ -10,7 +10,7 @@ import {
 } from "@/types/index";
 import { Button } from "@/components/ui/button";
 import { Save, Plus } from "lucide-react";
-import { mockProject } from "@/lib/utils";
+import { mockProject, normalizeCepNumber } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -29,6 +29,8 @@ import { createPhase } from "@/api/phase-api";
 import { createVersion } from "@/api/version-api";
 import { createMilestone } from "@/api/milestone-api";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import LoadingSpinner from "@/components/spinner";
 
 interface IVersion {
   id: string;
@@ -37,17 +39,13 @@ interface IVersion {
 
 const newProject = z.object({
   title: z.string().min(1, "Informe o nome do projeto"),
-
-  cep: z.string().min(7, "Informe o CEP"),
-
-  street: z.string().min(1, "Informe a rua"),
-  number: z.string().min(1, "Informe o número"),
-  address: z.string().min(1, "Informe o endereço"),
+  cep: z.string().max(9, "Informe o CEP"),
+  address: z.string().min(1, "Informe a rua"),
   district: z.string().min(1, "Informe o bairro"),
   city: z.string().min(1, "Informe a cidade"),
   state: z.string().min(1, "Informe a UF"),
   cod: z.string().min(4, "Informe o codigo"),
-  startDate: z.date(),
+  startDate: z.string().transform((str) => new Date(str)),
 });
 
 type NewProjectFormType = z.infer<typeof newProject>;
@@ -75,6 +73,8 @@ export function Project() {
       mode: "onSubmit",
     });
 
+    const {errors} = formState
+
   const findLatestVersion = (
     versions: ProjectVersion[]
   ): ProjectVersion | null => {
@@ -86,8 +86,7 @@ export function Project() {
     });
   };
 
-  const { isSubmitting, errors } = formState;
-  console.log(isSubmitting);
+  const { isSubmitting } = formState;
 
   const handleProjectById = async (id: string) => {
     const response = await getProjectById(id);
@@ -112,6 +111,8 @@ export function Project() {
   const cep = watch("cep");
 
   useEffect(() => {
+    setValue("cep", normalizeCepNumber(cep));
+
     if (cep?.length >= 7) {
       axios
         .get(`https://viacep.com.br/ws/${cep}/json/`)
@@ -135,7 +136,7 @@ export function Project() {
       setValue("city", "");
       setValue("state", "");
     }
-  }, [cep, setValue]);
+  }, [cep]);
 
   const handleUpdatedData = (project: Project) => {
     setProject(project);
@@ -228,7 +229,10 @@ export function Project() {
     [currentVersion, handleUpdate]
   );
 
+  console.log(errors)
+
   const handleCreateAndUpdateProject = async (data: NewProjectFormType) => {
+    console.log("OII");
     if (!project) return;
 
     let projectId = project.id;
@@ -284,10 +288,6 @@ export function Project() {
     navigate(`/project/${projectId}`);
   };
 
-  const handleGoToHome = () => {
-    navigate("/home");
-  };
-
   if (!project || !currentVersion) {
     return <LoadingSpinner />;
   }
@@ -331,7 +331,7 @@ export function Project() {
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-center mb-4">
           <span className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Cronograma do Projeto</h1>
+            <h1 className="text-2xl font-bold">Dados do Projeto</h1>
           </span>
           <div className="flex gap-2">
             <Button
@@ -380,50 +380,48 @@ export function Project() {
               <Input
                 {...register("title")}
                 placeholder="Nome"
-                className="bg-transparent focus:border-none col-span-3"
+                className="bg-transparent focus:border-none col-span-2"
               />
               <Input
                 {...register("cod")}
                 placeholder="Código"
-                className="col-span-2"
+                className="bg-transparent focus:border-none col-span-2"
               />
-
+              <Input
+                className="bg-transparent col-span-1"
+                {...register("startDate")}
+                placeholder="Data"
+                type="date"
+              />
               <Input
                 {...register("cep")}
                 placeholder="Cep"
                 className="bg-transparent focus:border-none col-span-2"
+                maxLength={9}
               />
               <Input
                 disabled
                 {...register("address")}
                 placeholder="Rua"
-                className="col-span-3"
+                className="col-span-3 disabled:bg-gray-300 placeholder:text-black"
               />
               <Input
                 disabled
                 {...register("district")}
                 placeholder="Bairro"
-                className="col-span-1"
+                className="col-span-2 disabled:bg-gray-300 placeholder:text-black"
               />
               <Input
                 disabled
                 {...register("city")}
                 placeholder="Cidade"
-                className="col-span-2"
+                className="col-span-2 disabled:bg-gray-300 placeholder:text-black"
               />
               <Input
                 disabled
                 {...register("state")}
                 placeholder="UF"
-                className="col-span-1"
-              />
-
-              <Input
-                className="bg-transparent"
-                {...register("startDate")}
-                placeholder="Data"
-                id="start-date"
-                type="date"
+                className="col-span-1 disabled:bg-gray-300 placeholder:text-black"
               />
             </form>
           </div>

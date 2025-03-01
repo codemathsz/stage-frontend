@@ -40,6 +40,14 @@ export const formatDateISO = (dateString: string | undefined): string => {
   return isoString.split('T')[0];
 };
 
+
+export const normalizeCepNumber = (value: string | undefined) => {
+  if (!value) return ''
+  return value.replace(/\D/g, "")
+  .replace(/^(\d{5})(\d{3})+?$/, "$1-$2")
+  .replace(/(-\d{3})(\d+?)/, '$1')    
+}
+
 export const mockProject: Project = {
   id: "",
   cod: "",

@@ -19,9 +19,9 @@ export function SideBar({ isOpen, handleClick }: SideBarProps) {
   const items = useMemo(
     () => [
       { title: "Projects", icon: <Kanban size={20} />, link: "/projects" },
-     /*  { title: "Home", icon: <House size={20} />, link: "/home" },
-      { title: "Settings", icon: <Gear size={20} />, link: "/settings" }, */
-      /* { title: "Meetings", icon: <Kanban size={20} />, link: "/meetings" }, */
+      { title: "Home", icon: <House size={20} />, link: "/home" },
+      { title: "Settings", icon: <Gear size={20} />, link: "/settings" }, 
+       { title: "Meetings", icon: <Kanban size={20} />, link: "/meetings" }, 
     ],
     []
   );
