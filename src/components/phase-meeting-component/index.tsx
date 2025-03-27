@@ -33,7 +33,7 @@ export function PhaseMeetingComponent({projectPhase, meeting}: PhaseMeetingProps
 
       <div className="w-full grid grid-cols-3 gap-4">
         {
-          meeting.map((meet, _index) => {
+          meeting.map((meet) => {
             return (
               <div className="col-span-1">
                 <PhaseMeetingCard key={meet.cod} meeting={meet}/>

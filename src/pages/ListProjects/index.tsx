@@ -21,6 +21,7 @@ export function ListProjects() {
   const [queryFilter, setQueryFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
+  
   const { projects } = useProject(user?.id);
 
 
@@ -42,6 +43,8 @@ export function ListProjects() {
         text?.toLowerCase().includes(queryFilter.toLowerCase())
       )
     );
+
+ 
 
   function handleRedirectToNewProject() {
     return navigate("/project");

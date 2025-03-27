@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from "react";
-import { ProjectHeader } from "@/components/project-header";
 import { TimelineSection } from "@/components/timeline-section";
 import {
   type Project,
@@ -31,6 +30,7 @@ import { createMilestone } from "@/api/milestone-api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/spinner";
+import { toast } from "sonner";
 
 interface IVersion {
   id: string;
@@ -38,7 +38,7 @@ interface IVersion {
 }
 
 const newProject = z.object({
-  title: z.string().min(1, "Informe o nome do projeto"),
+  title: z.string().min(5, "Informe o nome do projeto"),
   cep: z.string().max(9, "Informe o CEP"),
   address: z.string().min(1, "Informe a rua"),
   district: z.string().min(1, "Informe o bairro"),
@@ -57,7 +57,6 @@ export function Project() {
   const [versions, setVersions] = useState<IVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<IVersion | null>(null);
   const [project, setProject] = useState<Project>();
-  const [initialProject, setInitialProject] = useState<Project>();
   const user = useSelector((state: RootState) => state.user.userData) as User;
   const [currentVersion, setCurrentVersion] = useState<ProjectVersion | null>(
     null
@@ -73,7 +72,7 @@ export function Project() {
       mode: "onSubmit",
     });
 
-    const {errors} = formState
+    const cep = watch("cep");
 
   const findLatestVersion = (
     versions: ProjectVersion[]
@@ -93,6 +92,7 @@ export function Project() {
     return response;
   };
 
+
   useEffect(() => {
     const getProject = async () => {
       if (id) {
@@ -108,12 +108,11 @@ export function Project() {
     getProject();
   }, [id, user]);
 
-  const cep = watch("cep");
+
 
   useEffect(() => {
     setValue("cep", normalizeCepNumber(cep));
-
-    if (cep?.length >= 7) {
+    if (cep?.length === 9) {
       axios
         .get(`https://viacep.com.br/ws/${cep}/json/`)
         .then((response) => {
@@ -124,7 +123,7 @@ export function Project() {
             setValue("city", data.localidade || "");
             setValue("state", data.uf || "");
           } else {
-            alert("CEP não encontrado.");
+            toast.error("CEP inválido");
           }
         })
         .catch((error) => {
@@ -136,11 +135,10 @@ export function Project() {
       setValue("city", "");
       setValue("state", "");
     }
-  }, [cep]);
+  }, [cep, setValue]);
 
   const handleUpdatedData = (project: Project) => {
     setProject(project);
-    setInitialProject(project);
     const latestVersion = findLatestVersion(project?.versions);
     if (latestVersion) {
       setValue("title", latestVersion?.title);
@@ -169,6 +167,13 @@ export function Project() {
   const handleChangeSelectVersion = (versionId: string) => {
     const current = project?.versions.find((v) => v.id === versionId);
     if (current) {
+      setValue("title", current.title);
+      setValue("cep", current.cep);
+      setValue("address", current.address);
+      setValue("city", current.city);
+      setValue("state", current.state);
+      setValue("district", current.district);
+      setValue("startDate", current.startDate);
       setCurrentVersion(current);
       setSelectedVersion(current);
     }
@@ -183,7 +188,7 @@ export function Project() {
           updatedAt: new Date(),
         };
         setCurrentVersion(newVersion);
-        setProject((prevProject: any) => ({
+        setProject((prevProject) => ({
           ...prevProject!,
           versions: [newVersion, ...prevProject!.versions.slice(1)],
         }));
@@ -229,10 +234,7 @@ export function Project() {
     [currentVersion, handleUpdate]
   );
 
-  console.log(errors)
-
   const handleCreateAndUpdateProject = async (data: NewProjectFormType) => {
-    console.log("OII");
     if (!project) return;
 
     let projectId = project.id;
@@ -240,9 +242,11 @@ export function Project() {
     if (!project.id && !id) {
       const responseCreateProject = await createProject(project);
       projectId = responseCreateProject.id;
+      toast.success("Projeto cadastrado com sucesso!");
     } else {
       const responseUpdateProject = await updateProjectApi(project);
       projectId = responseUpdateProject.id;
+      toast.success("Projeto atualizado com sucesso!");
     }
 
     if (currentVersion) {
@@ -452,7 +456,7 @@ export function Project() {
 
         <TimelineSection
           phases={projectPhases}
-          onUpdate={(updatedPhases: any) =>
+          onUpdate={(updatedPhases) =>
             handleUpdate({
               phases: [...updatedPhases, ...(constructionPhases ?? [])],
             })

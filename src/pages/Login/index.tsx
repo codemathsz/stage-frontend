@@ -1,23 +1,14 @@
 import { authenticate } from "@/api/auth";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { useGetUser } from "@/hooks/useGetUser";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const userAuth = z.object({
   email: z.string().email("E-mail inválido"),
@@ -27,16 +18,16 @@ const userAuth = z.object({
 export type NewUserAuth = z.infer<typeof userAuth>;
 
 export function Login() {
+  
   const getUser = useGetUser();
   const { login } = useAuth();
-  const [error, setError] = useState<string | null>(null);
 
-  const { register, handleSubmit } = useForm<NewUserAuth>({
-    resolver: zodResolver(userAuth),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<NewUserAuth>({
+    resolver: zodResolver(userAuth)
   });
 
   const handleLogin = async (data: NewUserAuth) => {
@@ -45,66 +36,57 @@ export function Login() {
       if (token && typeof token === "string") {
         await Promise.all([getUser(token), login(token)]);
       } else {
-        setError("E-mail ou senha incorreto.");
+        toast.error("E-mail e/ou senha incorretos.");
       }
     } catch (err) {
       const axiosError = err as AxiosError;
       if (axiosError.response?.status === 401) {
-        setError("E-mail ou senha incorreto.");
+        toast.error("E-mail e/ou senha incorretos.");
       }
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>
-            Entre com suas credenciais para acessar sua conta.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
-            <div className="space-y-2">
-              <Label className="font-bold" htmlFor="email">
-                E-mail
-              </Label>
+    <div className="flex items-center justify-center h-screen bg-primary/90">
+      <div className="w-full max-w-[65.9rem] bg-white flex rounded-lg shadow-sm h-[600px]">
+        <div className="w-1/2 bg-gray-300 rounded-l-lg" />
+        <div className="w-1/2 p-6">
+          <h1 className="text-3xl font-bold text-center">Login</h1>
+          <p className="font-bold text-center mt-3">
+            Faça o login e veja seus projetos
+          </p>
+          <div className="flex h-full items-center justify-center">
+            <form
+              onSubmit={handleSubmit(handleLogin)}
+              className="w-full flex flex-col space-y-3"
+            >
+              <Label className="font-bold">Informe seu e-mail</Label>
               <Input
-                className="border-0"
-                id="email"
                 type="email"
-                placeholder="Digite seu e-mail"
                 {...register("email")}
+                className="w-full"
+                required
               />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-bold" htmlFor="password">
-                Senha
-              </Label>
-              <Input
-                className="border-0"
-                id="password"
-                type="password"
-                {...register("password")}
-                placeholder="Digite sua senha"
-              />
-            </div>
-            {error && <p className="text-red-500">{error}</p>}
-            <Button type="submit" className="w-full text-white">
-              Entrar
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Esqueci minha senha
-          </Link>
-        </CardFooter>
-      </Card>
+              {errors.email && (
+                <span className="text-red-500">{errors.email.message}</span>
+              )}
+              <Label className="font-bold">Informe sua senha</Label>
+              <Input type="password" {...register("password")} className="w-full" required />
+              {errors.password && (
+                <span className="text-red-500 text-sm">
+                  {errors.password.message}
+                </span>
+              )}
+              <Button
+                disabled={isSubmitting}
+                className="bg-black/90 text-white"
+              >
+                {isSubmitting ? "Entrando..." : "Entrar"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

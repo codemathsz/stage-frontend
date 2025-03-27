@@ -1,16 +1,7 @@
 import { API } from "../lib/axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Project } from "@/types";
 import { toast } from "sonner";
-
-type ProjectResponse = Project[];
-
-async function fetchProjects(userId: string): Promise<ProjectResponse> {
-  const response = await API.get<ProjectResponse>(
-    `/api/project/userId/${userId}`
-  );
-  return response.data;
-}
+import { getProjectByUserId } from "@/api/project-api";
 
 async function deleteProject(projectId: string) {
   if (projectId) {
@@ -23,7 +14,7 @@ export function useProject(id: string) {
 
   const query = useQuery({
     queryKey: ["fetchAllProjectsByUserId", id],
-    queryFn: () => fetchProjects(id),
+    queryFn: () => getProjectByUserId(id),
   });
 
   const { mutate: handleDeleteProject } = useMutation({
