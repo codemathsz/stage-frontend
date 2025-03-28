@@ -1,12 +1,11 @@
 import { API } from "@/lib/axios";
 
-interface IAuth {
+interface AuthProps {
   email: string
   password: string
 }
 
-export const authenticate = async (credentials: IAuth): Promise<string> => {
-  const response = await API.post('/users/auth', credentials);
-  const token = response.data;
-  return token;
+export async function authenticate({ email, password }: AuthProps) {
+  const response = await API.post<string>('/users/auth', { email, password });
+  return response.data;
 };
