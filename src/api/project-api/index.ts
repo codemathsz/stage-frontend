@@ -7,7 +7,7 @@ export async function createProject(project: Project) {
 };
 
 export async function updateProjectApi(project: Project) {
-  const response = await API.put(`/api/project/${project.id}`, project)
+  const response = await API.put<Project>(`/api/project/${project.id}`, project)
   return response.data
 }
 
@@ -16,7 +16,14 @@ export async function getProjectById(id: string) {
   return response.data;
 };
 
-export const getProjectByUserId = async (userId: string) => {
-  const response = await API.get<Project>(`/api/project/userId/${userId}`);
+export async function getProjectByUserId(userId: string) {
+  const response = await API.get<Project[]>(`/api/project/userId/${userId}`);
   return response.data;
 };
+
+
+export async function deleteProjectById(projectId: string) {
+  if (projectId) {
+    await API.delete(`/api/project/${projectId}`);
+  }
+}

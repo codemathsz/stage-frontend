@@ -4,6 +4,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { getMeetingsObjectives } from "@/api/meet-api/get-meeting-objectives";
 
 interface MeetingModalProps {
   onClose: () => void;
@@ -22,33 +24,40 @@ const newMeeting = z.object({
 
 type NewMeetingFormType = z.infer<typeof newMeeting>;
 
-export function MeetingModal({onClose}: MeetingModalProps){
+export function MeetingModal({ onClose }: MeetingModalProps) {
 
   const { register } = useForm<NewMeetingFormType>();
 
-  return(
+  const { data } = useQuery({
+    queryFn: getMeetingsObjectives,
+    queryKey: ["teste"]
+  })
+
+  console.log(data)
+
+  return (
     <div className="fixed inset-0 flex items-center justify-center w-full h-screen bg-black bg-opacity-50 z-50">
       <div className="w-2/4 max-w-[45.9rem] bg-white flex flex-col gap-4 rounded-lg shadow-sm p-6 font-poppins">
         <div className="w-full flex justify-between">
           <h1 className="text-lg font-medium">Nova Reunião</h1>
-          <X size={18} className="cursor-pointer" onClick={() => onClose()}/>
+          <X size={18} className="cursor-pointer" onClick={() => onClose()} />
         </div>
         <div className="w-full flex flex-col gap-4">
           <div>
             <Label className="text-sm font-medium">Titulo da reunião</Label>
             <Input
-                {...register("title")}
-                placeholder=""
-                className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
-              />
+              {...register("title")}
+              placeholder=""
+              className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
+            />
           </div>
           <div>
             <Label className="text-sm font-medium">Objetivo da reunião</Label>
             <Input
-                {...register("meetingType")}
-                placeholder="Informativa"
-                className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
-              />
+              {...register("meetingType")}
+              placeholder="Informativa"
+              className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
+            />
           </div>
           <div className="w-full flex flex-col items-start gap-4">
             <div className="w-full flex items-center justify-between gap-4">
@@ -81,35 +90,35 @@ export function MeetingModal({onClose}: MeetingModalProps){
           <div>
             <Label className="text-sm font-medium">Moderador</Label>
             <Input
-                {...register("moderator")}
-                placeholder="John Doe"
-                className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
-              />
+              {...register("moderator")}
+              placeholder="John Doe"
+              className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
+            />
           </div>
           <div>
             <Label className="text-sm font-medium">Participantes</Label>
             <Input
-                {...register("participants")}
-                placeholder="Nome do participante"
-                className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
-              />
+              {...register("participants")}
+              placeholder="Nome do participante"
+              className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
+            />
           </div>
           <div>
             <Label className="text-sm font-medium">Pautas</Label>
             <Input
-                {...register("meetingAgenda")}
-                placeholder="Título da pauta"
-                className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
-              />
+              {...register("meetingAgenda")}
+              placeholder="Título da pauta"
+              className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
+            />
           </div>
           <div className="w-full flex justify-end gap-2">
-            <Button 
+            <Button
               className="flex gap-2 items-center rounded-md border hover:bg-gray-200 border-gray-200 bg-white px-4 py-2"
               onClick={() => onClose()}
             >
               Cancelar
             </Button>
-            <Button 
+            <Button
               className="flex gap-2 items-center rounded-md border bg-primary text-white px-4 py-2"
               onClick={() => alert('Em construção...')}
             >
