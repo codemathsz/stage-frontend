@@ -19,7 +19,7 @@ export interface ProjectVersion {
   version: string;
   title: string;
   address: string;
-  cep:string;
+  cep: string;
   district: string;
   city: string;
   state: string;
@@ -50,8 +50,8 @@ export interface Milestone {
 }
 
 export enum PhaseType {
-  PROJECT = 'PROJECT',
-  CONSTRUCTION = 'CONSTRUCTION',
+  PROJECT = "PROJECT",
+  CONSTRUCTION = "CONSTRUCTION",
 }
 
 export interface User {
@@ -67,3 +67,29 @@ export interface User {
   updatedAt: Date;
   projects: Project[];
 }
+
+export interface MeetType {
+  title: string;
+  meetObjectiveId: number;
+  meetDate: string;
+  meetTimeStart: string;
+  meetTimeFinish: string;
+  moderator: string;
+  participants: string[];
+  agendas: [
+    {
+      name: string;
+      agendaTypeId: number;
+    }
+  ];
+  projectPhaseId: string;
+}
+
+export interface AgendaType {
+  id: string;
+  name: string;
+  created_at: string;
+  activated: boolean;
+}
+
+
