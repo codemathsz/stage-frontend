@@ -18,9 +18,11 @@ import { getAgendas } from "@/api/meet-api/get-agendas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createMeeting } from "@/api/meet-api/create-meeting";
 import { MeetType } from "@/types";
+import { useState } from "react";
 
 interface MeetingModalProps {
   onClose: () => void;
+  projectPhaseId: string;
 }
 
 const newMeeting = z.object({
@@ -36,8 +38,10 @@ const newMeeting = z.object({
 
 type NewMeetingFormType = z.infer<typeof newMeeting>;
 
-export function MeetingModal({ onClose }: MeetingModalProps) {
-  const { register, handleSubmit, control, formState: { errors } } = useForm<NewMeetingFormType>({
+export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
+  const [inputValue, setInputValue] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const { register, handleSubmit, control } = useForm<NewMeetingFormType>({
     resolver: zodResolver(newMeeting),
   });
 
@@ -49,38 +53,37 @@ export function MeetingModal({ onClose }: MeetingModalProps) {
     queryFn: getUsers,
     queryKey: ["getAllParticipants"],
   });
-  const { data: agendas } = useQuery({
+  const { data: pautas } = useQuery({
     queryFn: getAgendas,
-    queryKey: ["getAllAgendas"],
+    queryKey: ["getAllPautas"],
   });
 
   const { mutateAsync: createMeetingFn } = useMutation({
+    mutationFn: (meet: MeetType) => createMeeting(meet),
+  });
 
-    mutationFn: (meet: MeetType) => createMeeting(meet)
-  })
+  async function handleCreateMeeting(data: NewMeetingFormType) {
+    const agenda = JSON.parse(data.meetingAgenda);
 
-  async function handleCreateMeeting(data: MeetType) {
     const meetData = {
       title: data.title,
-      meetObjectiveId: "d877f94c-b377-434b-9110-6499ef4283cb",
-      meetDate: data.meetDate,
-      meetTimeStart: data.meetTimeStart,
-      meetTimeFinish: data.meetTimeFinish,
+      meetObjectiveId: data.meetingType,
+      meetDate: data.meetingDate,
+      meetTimeStart: data.meetingHourStart,
+      meetTimeFinish: data.meetingHourFinish,
       moderator: data.moderator,
       participants: [data.participants],
       agendas: [
         {
-          name: "Outros",
-          agendaTypeId: data.agendas,
+          name: agenda.name,
+          agendaTypeId: agenda.id,
         },
       ],
-      projectPhaseId: data.projectPhaseId,
+      projectPhaseId: projectPhaseId,
     };
 
-    await createMeetingFn(meetData)
+    await createMeetingFn(meetData);
   }
-
-  console.log(errors)
 
   return (
     <div className="fixed inset-0 flex items-center justify-center w-full h-screen bg-black bg-opacity-50 z-50">
@@ -107,7 +110,10 @@ export function MeetingModal({ onClose }: MeetingModalProps) {
               name="meetingType"
               control={control}
               render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o objetivo" />
                   </SelectTrigger>
@@ -125,27 +131,18 @@ export function MeetingModal({ onClose }: MeetingModalProps) {
             />
           </div>
           <div className="w-full flex flex-col items-start gap-4">
-            <div className="w-full flex items-center justify-between gap-4">
-              <div className="w-1/2">
-                <Label className="text-sm font-medium">Data</Label>
-                <Input
-                  type="date"
-                  {...register("meetingDate")}
-                  placeholder="Data"
-                  className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-5"
-                  min={new Date().toISOString().split("T")[0]}
-                />
-              </div>
-              <div className="w-[45%]">
-                <Label className="text-sm font-medium">Horário de Início</Label>
-                <Input
-                  type="time"
-                  {...register("meetingHourStart")}
-                  placeholder="10:00"
-                  className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
-                />
-              </div>
+            <div className="w-full">
+              <Label className="text-sm font-medium">Data</Label>
+              <Input
+                type="date"
+                {...register("meetingDate")}
+                placeholder="Data"
+                className="bg-transparent placeholder:text-gray-500 focus:border-none w-full"
+                min={new Date().toISOString().split("T")[0]}
+              />
             </div>
+          </div>
+          <div className="w-full flex items-center justify-between gap-4">
             <div className="w-1/2">
               <Label className="text-sm font-medium">
                 Horário de encerramento
@@ -157,54 +154,82 @@ export function MeetingModal({ onClose }: MeetingModalProps) {
                 className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
               />
             </div>
+
+            <div className="w-[45%]">
+              <Label className="text-sm font-medium">Horário de Início</Label>
+              <Input
+                type="time"
+                {...register("meetingHourStart")}
+                placeholder="10:00"
+                className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
+              />
+            </div>
           </div>
           <div>
-            <Label className="text-sm font-medium">Moderador</Label>
+            <Label className="text-sm font-medium ">Moderador</Label>
             <Input
               {...register("moderator")}
               placeholder="John Doe"
               className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
             />
-          </div>
-          <div>
-            <Label className="text-sm font-medium">Participantes</Label>
 
-            <Controller
-              name="participants"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value} >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um participante" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-100">
-                    {participants?.map((participant) => {
-                      return (
-                        <SelectItem value={participant.id}>
-                          {participant.name}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+            <div className="flex flex-col gap-3">
+              <Label className="text-sm font-medium">Participantes</Label>
+              <Input
+                type="text"
+                placeholder="Digite algo..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onFocus={() => {
+                  setIsOpen(true);
+                }}
+                onBlur={() => setTimeout(() => setIsOpen(false), 200)} // Fecha o select ao perder o foco
+                className="flex-1"
+              />
+              {isOpen && (
+                <Controller
+                  name="participants"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione um participante" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-100">
+                        {participants?.map((participant) => {
+                          return (
+                            <SelectItem value={participant.id}>
+                              {participant.name}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-            />
+            </div>
           </div>
           <div>
-            <Label className="text-sm font-medium">Agendas</Label>
+            <Label className="text-sm font-medium">Pautas</Label>
             <Controller
               name="meetingAgenda"
               control={control}
               render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione uma agenda" />
+                    <SelectValue placeholder="Selecione uma pauta" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-100">
-                    {agendas?.map((agenda) => {
-
+                    {pautas?.map((agenda) => {
                       return (
-                        <SelectItem value={agenda.id}>
+                        <SelectItem value={JSON.stringify(agenda)}>
                           {agenda.name}
                         </SelectItem>
                       );
