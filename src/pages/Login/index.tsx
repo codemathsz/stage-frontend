@@ -31,7 +31,7 @@ export function Login() {
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
-  const { register, handleSubmit } = useForm<NewUserAuth>({
+  const { register, handleSubmit, formState:{isSubmitting} } = useForm<NewUserAuth>({
     resolver: zodResolver(userAuth),
     defaultValues: {
       email: "",
@@ -91,7 +91,7 @@ export function Login() {
               />
             </div>
             {error && <p className="text-red-500">{error}</p>}
-            <Button type="submit" className="w-full text-white">
+            <Button disabled={isSubmitting} type="submit" className="w-full text-white">
               Entrar
             </Button>
           </form>

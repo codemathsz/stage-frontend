@@ -1,10 +1,10 @@
 import { Label } from "@radix-ui/react-label";
 import { Input } from "../ui/input";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getMeetingsObjectives } from "@/api/meet-api/get-meeting-objectives";
 import {
   Select,
@@ -16,6 +16,8 @@ import {
 import { getUsers } from "@/api/meet-api/get-users";
 import { getAgendas } from "@/api/meet-api/get-agendas";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createMeeting } from "@/api/meet-api/create-meeting";
+import { MeetType } from "@/types";
 
 interface MeetingModalProps {
   onClose: () => void;
@@ -27,15 +29,15 @@ const newMeeting = z.object({
   meetingDate: z.string().min(1, "Informe a data da reunião."),
   meetingHourFinish: z.string().min(1, "Informe a hora de fim da reunião."),
   meetingHourStart: z.string().min(1, "Informe a hora de inicio da reunião."),
-  moderator: z.string().min(5, "Informe o moderador da reunião."),
-  participants: z.string().min(5, "Informe o participante da reunião."),
-  meetingAgenda: z.string().min(5, "Informe a pauta da reunião."),
+  moderator: z.string().min(1, "Informe o moderador da reunião."),
+  participants: z.string().min(1, "Informe o participante da reunião."),
+  meetingAgenda: z.string().min(1, "Informe a pauta da reunião."),
 });
 
 type NewMeetingFormType = z.infer<typeof newMeeting>;
 
 export function MeetingModal({ onClose }: MeetingModalProps) {
-  const { register, handleSubmit, formState:{ errors} } = useForm<NewMeetingFormType>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<NewMeetingFormType>({
     resolver: zodResolver(newMeeting),
   });
 
@@ -52,8 +54,30 @@ export function MeetingModal({ onClose }: MeetingModalProps) {
     queryKey: ["getAllAgendas"],
   });
 
-  function handleCreateMeeting(data: NewMeetingFormType) {
-    console.log(data);
+  const { mutateAsync: createMeetingFn } = useMutation({
+
+    mutationFn: (meet: MeetType) => createMeeting(meet)
+  })
+
+  async function handleCreateMeeting(data: MeetType) {
+    const meetData = {
+      title: data.title,
+      meetObjectiveId: "d877f94c-b377-434b-9110-6499ef4283cb",
+      meetDate: data.meetDate,
+      meetTimeStart: data.meetTimeStart,
+      meetTimeFinish: data.meetTimeFinish,
+      moderator: data.moderator,
+      participants: [data.participants],
+      agendas: [
+        {
+          name: "Outros",
+          agendaTypeId: data.agendas,
+        },
+      ],
+      projectPhaseId: data.projectPhaseId,
+    };
+
+    await createMeetingFn(meetData)
   }
 
   console.log(errors)
@@ -79,20 +103,26 @@ export function MeetingModal({ onClose }: MeetingModalProps) {
           </div>
           <div>
             <Label className="text-sm font-medium">Objetivo da reunião</Label>
-            <Select>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Objetivo" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-100">
-                {meetingObjectives?.map((objective) => {
-                  return (
-                    <SelectItem value={objective.id}>
-                      {objective.name}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="meetingType"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o objetivo" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-100">
+                    {meetingObjectives?.map((objective) => {
+                      return (
+                        <SelectItem value={objective.id}>
+                          {objective.name}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
           <div className="w-full flex flex-col items-start gap-4">
             <div className="w-full flex items-center justify-between gap-4">
@@ -138,35 +168,51 @@ export function MeetingModal({ onClose }: MeetingModalProps) {
           </div>
           <div>
             <Label className="text-sm font-medium">Participantes</Label>
-            <Select>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione um participante" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-100">
-                {participants?.map((participant) => {
-                  return (
-                    <SelectItem value={participant.id}>
-                      {participant.name}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+
+            <Controller
+              name="participants"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value} >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um participante" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-100">
+                    {participants?.map((participant) => {
+                      return (
+                        <SelectItem value={participant.id}>
+                          {participant.name}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
           <div>
-            <Label className="text-sm font-medium">Pautas</Label>
-            <Select>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Objetivo" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-100">
-                {agendas?.map((agenda) => {
-                  return (
-                    <SelectItem value={agenda.id}>{agenda.name}</SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <Label className="text-sm font-medium">Agendas</Label>
+            <Controller
+              name="meetingAgenda"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione uma agenda" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-100">
+                    {agendas?.map((agenda) => {
+
+                      return (
+                        <SelectItem value={agenda.id}>
+                          {agenda.name}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
           <div className="w-full flex justify-end gap-2">
             <Button

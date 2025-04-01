@@ -68,28 +68,27 @@ export interface User {
   projects: Project[];
 }
 
-export interface MeetType {
-  title: string;
-  meetObjectiveId: number;
-  meetDate: string;
-  meetTimeStart: string;
-  meetTimeFinish: string;
-  moderator: string;
-  participants: string[];
-  agendas: [
-    {
-      name: string;
-      agendaTypeId: number;
-    }
-  ];
-  projectPhaseId: string;
-}
-
 export interface AgendaType {
   id: string;
   name: string;
   created_at: string;
   activated: boolean;
 }
+
+export interface MeetType {
+  title: string;
+  meetObjectiveId: number;
+  meetDate: string; 
+  meetTimeStart: string; 
+  meetTimeFinish: string;
+  moderator: string;
+  participants: string[];
+  agendas: {
+    name: string;
+    agendaTypeId: number;
+  }[];
+  projectPhaseId: string;
+}
+
 
 
