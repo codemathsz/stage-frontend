@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from "react";
-import { ProjectHeader } from "@/components/project-header";
 import { TimelineSection } from "@/components/timeline-section";
 import {
   type Project,
@@ -23,7 +22,6 @@ import {
 } from "@/api/project-api";
 import { createVersion } from "@/api/version-api";
 import { createPhase } from "@/api/phase-api";
-import { ChevronLeft } from "lucide-react";
 import LoadingSpinner from "@/components/spinner";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
@@ -32,6 +30,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner"
 interface IVersion {
   id: string;
   version: string;
@@ -40,21 +39,19 @@ interface IVersion {
 const newProject = z.object({
   title: z.string().min(1, "Informe o nome do projeto"),
   cep: z.string().min(8, "Informe o CEP"),
-  street: z.string().min(1, "Informe a rua"),
-  number: z.string().min(1, "Informe o número"),
   address: z.string().min(1, "Informe o endereço"),
   district: z.string().min(1, "Informe o bairro"),
   city: z.string().min(1, "Informe a cidade"),
   state: z.string().min(1, "Informe a UF"),
   cod: z.string().min(4, "Informe o codigo"),
-  startDate: z.date(),
+  startDate: z.string(),
 });
 
 type NewProjectFormType = z.infer<typeof newProject>;
 
 export function Project() {
   const { id } = useParams();
-  console.log(id);
+
   const navigate = useNavigate();
   const [versions, setVersions] = useState<IVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<IVersion | null>(null);
@@ -66,11 +63,8 @@ export function Project() {
   );
   const [constructionStartDate, setConstructionStartDate] = useState<string>();
 
-  const { register, handleSubmit, setValue, watch, formState } =
+  const { register, handleSubmit, setValue, watch, formState: { isSubmitting } } =
     useForm<NewProjectFormType>({
-      defaultValues: {
-        title: currentVersion?.title,
-      },
       resolver: zodResolver(newProject),
       mode: "onSubmit",
     });
@@ -86,18 +80,11 @@ export function Project() {
     });
   };
 
-  const { isSubmitting, errors } = formState;
-  console.log(isSubmitting);
-
-  const handleProjectById = async (id: string) => {
-    const response = await getProjectById(id);
-    return response;
-  };
 
   useEffect(() => {
     const getProject = async () => {
       if (id) {
-        const response = await handleProjectById(id);
+        const response = await getProjectById(id);
         handleUpdatedData(response);
       } else {
         if (user?.id) {
@@ -110,6 +97,8 @@ export function Project() {
   }, [id, user]);
 
   const cep = watch("cep");
+
+  console.log(currentVersion)
 
   useEffect(() => {
     if (cep?.length >= 8) {
@@ -170,6 +159,9 @@ export function Project() {
     if (current) {
       setCurrentVersion(current);
       setSelectedVersion(current);
+      if (currentVersion) {
+        setValue("title", currentVersion.title)
+      }
     }
   };
 
@@ -230,15 +222,16 @@ export function Project() {
 
   const handleCreateAndUpdateProject = async (data: NewProjectFormType) => {
     if (!project) return;
-
     let projectId = project.id;
     project.cod = data.cod;
     if (!project.id && !id) {
       const responseCreateProject = await createProject(project);
       projectId = responseCreateProject.id;
+      toast.success("Projeto criado com sucesso")
     } else {
       const responseUpdateProject = await updateProjectApi(project);
       projectId = responseUpdateProject.id;
+      toast.success("Projeto atualizado com sucesso")
     }
 
     if (currentVersion) {
@@ -254,6 +247,7 @@ export function Project() {
         state: data.state,
         title: data.title,
         cep: data.cep,
+
       };
 
       const responseCreateVersion = await createVersion(versionData);
@@ -282,10 +276,6 @@ export function Project() {
     const updatedProject = await getProjectById(projectId);
     handleUpdatedData(updatedProject);
     navigate(`/project/${projectId}`);
-  };
-
-  const handleGoToHome = () => {
-    navigate("/home");
   };
 
   if (!project || !currentVersion) {
@@ -331,9 +321,6 @@ export function Project() {
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex justify-between items-center mb-4">
           <span className="flex items-center gap-2">
-{/*             <button onClick={handleGoToHome}>
-              <ChevronLeft className="h-5 w-5 font-bold" />
-            </button> */}
             <h1 className="text-2xl font-bold">Cronograma do Projeto</h1>
           </span>
           <div className="flex gap-2">
@@ -344,7 +331,7 @@ export function Project() {
               disabled={isSubmitting}
             >
               <Save size={20} />
-              Salvar Configurações
+              Salvar
             </Button>
             <select
               className="w-full h-10 pl-3 pr-6 text-base placeholder-gray-600 border rounded-lg appearance-none focus:shadow-outline"

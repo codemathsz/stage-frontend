@@ -13,11 +13,7 @@ API.interceptors.request.use(
 
     const isPublicRoute =
       config.url &&
-      routesPublics.some((rota) => {
-        if (config.url) {
-          config.url.includes(rota);
-        }
-      });
+      routesPublics.some((rota) => config.url?.includes(rota));
 
     if (!isPublicRoute && token) {
       config.headers.Authorization = `Bearer ${token}`;

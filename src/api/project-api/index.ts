@@ -1,51 +1,29 @@
 import { API } from "@/lib/axios";
 import { Project } from "@/types";
-import Cookies from "js-cookie";
 
-export const createProject = async (project: Project): Promise<Project> => {
-  const token = Cookies.get("token");
-
-  const response = await API.post("/api/project/", project, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function createProject(project: Project) {
+  const response = await API.post<Project>("/api/project/", project);
   return response.data;
 };
 
-export const updateProjectApi = async (project: Project): Promise<Project> =>{
-  const token = Cookies.get('token');
-
-  const response = await API.put(`/api/project/${project.id}`, project, {
-    headers: { 
-      'Content-Type':'application/json',
-      'Authorization': `Bearer ${token}` 
-    } 
-  })
+export async function updateProjectApi(project: Project) {
+  const response = await API.put<Project>(`/api/project/${project.id}`, project)
   return response.data
 }
 
-export const getProjectById = async (id: string): Promise<Project> => {
-  const token = Cookies.get("token");
-
-  const response = await API.get(`/api/project/id/${id}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function getProjectById(id: string) {
+  const response = await API.get<Project>(`/api/project/id/${id}`);
   return response.data;
 };
 
-export const getProjectByUserId = async (userId: string) => {
-  const token = Cookies.get("token");
-
-  const response = await API.get(`/api/project/userId/${userId}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function getProjectByUserId(userId: string) {
+  const response = await API.get<Project[]>(`/api/project/userId/${userId}`);
   return response.data;
 };
+
+
+export async function deleteProjectById(projectId: string) {
+  if (projectId) {
+    await API.delete(`/api/project/${projectId}`);
+  }
+}

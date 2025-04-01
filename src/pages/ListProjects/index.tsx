@@ -15,13 +15,17 @@ import { useSelector } from "react-redux";
 import { Plus, CaretDown, X } from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { DropdownWithModal } from "@/components/Modal/DropdownWithModal";
-import { useProject } from "@/hooks/useProjects";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getProjectByUserId } from "@/api/project-api";
 export function ListProjects() {
   const [queryFilter, setQueryFilter] = useState("");
   const user = useSelector((state: RootState) => state.user.userData) as User;
 
-  const { projects } = useProject(user?.id);
+  const { data: projects } = useQuery({
+    queryFn: () => getProjectByUserId(user?.id),
+    queryKey: ["get-projects"]
+  })
 
 
   const navigate = useNavigate();
@@ -142,8 +146,8 @@ export function ListProjects() {
 
                 <TableCell colSpan={5} className="text-center py-4">
                   <div className="flex flex-col mt-10">
-                  <span>Nenhum projeto encontrado.</span>
-                  <Link className="underline font-bold" to="/project">Criar novo projeto</Link>
+                    <span>Nenhum projeto encontrado.</span>
+                    <Link className="underline font-bold" to="/project">Criar novo projeto</Link>
                   </div>
                 </TableCell>
               </TableRow>

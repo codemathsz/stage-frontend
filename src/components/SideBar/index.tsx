@@ -1,27 +1,26 @@
 import { useAuth } from "@/context/AuthContext";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
-import { CaretRight, Kanban, Gear, House } from "phosphor-react";
+import { CaretRight, Kanban, House } from "phosphor-react";
 import { Link, useLocation } from "react-router-dom";
-import clsx from "clsx"; 
+import clsx from "clsx";
 import { useMemo } from "react";
 import logoS from "../../assets/logo-s.jpg";
 import logoStg from "../../assets/logo-stg.jpg";
 
 type SideBarProps = {
-  isOpen: boolean;
-  handleClick: VoidFunction;
+  isOpenSidebar: boolean;
+  handleOpenAndCloseSidebar: VoidFunction;
 };
 
-export function SideBar({ isOpen, handleClick }: SideBarProps) {
+export function SideBar({ isOpenSidebar, handleOpenAndCloseSidebar }: SideBarProps) {
   const { logout } = useAuth();
   const location = useLocation();
 
   const items = useMemo(
     () => [
       { title: "Projects", icon: <Kanban size={20} />, link: "/projects" },
-     /*  { title: "Home", icon: <House size={20} />, link: "/home" },
-      { title: "Settings", icon: <Gear size={20} />, link: "/settings" }, */
-      /* { title: "Meetings", icon: <Kanban size={20} />, link: "/meetings" }, */
+      { title: "Home", icon: <House size={20} />, link: "/home" },
+      { title: "Meetings", icon: <Kanban size={20} />, link: "/meetings" },
     ],
     []
   );
@@ -30,15 +29,15 @@ export function SideBar({ isOpen, handleClick }: SideBarProps) {
     <nav
       className={clsx(
         "bg-white flex flex-col fixed min-h-screen shadow-md transition-all duration-200",
-        isOpen ? "w-72" : "w-28"
+        isOpenSidebar ? "w-72" : "w-28"
       )}
     >
       <button
-        onClick={handleClick}
+        onClick={handleOpenAndCloseSidebar}
         className="bg-primary p-2 z-20 rounded-full absolute cursor-pointer -right-4 top-9"
         aria-label="Toggle Sidebar"
       >
-        {isOpen ? (
+        {isOpenSidebar ? (
           <ChevronsLeft className="text-white" size={26} />
         ) : (
           <ChevronsRight className="text-white" size={26} />
@@ -47,7 +46,7 @@ export function SideBar({ isOpen, handleClick }: SideBarProps) {
 
       <div className="w-full flex justify-center mx-auto rounded-lg">
         <img
-          src={isOpen ? logoStg : logoS}
+          src={isOpenSidebar ? logoStg : logoS}
           alt="STG Logo"
           className="object-contain my-4 transition-all duration-300"
         />
@@ -56,7 +55,7 @@ export function SideBar({ isOpen, handleClick }: SideBarProps) {
       <div
         className={clsx(
           "w-full flex flex-col gap-3 px-6 mt-16 transition-all duration-300",
-          !isOpen && "items-center"
+          !isOpenSidebar && "items-center"
         )}
       >
         {items.map((item) => (
@@ -73,13 +72,13 @@ export function SideBar({ isOpen, handleClick }: SideBarProps) {
               <div
                 className={clsx(
                   "w-full flex items-center gap-4",
-                  !isOpen && "justify-center"
+                  !isOpenSidebar && "justify-center"
                 )}
               >
                 <span className="text-sm text-center">{item.icon}</span>
-                {isOpen && <span>{item.title}</span>}
+                {isOpenSidebar && <span>{item.title}</span>}
               </div>
-              {isOpen && <CaretRight size={20} />}
+              {isOpenSidebar && <CaretRight size={20} />}
             </div>
           </Link>
         ))}

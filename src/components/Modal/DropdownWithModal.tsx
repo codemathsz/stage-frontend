@@ -1,23 +1,22 @@
 import { useState } from "react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash, Calendar } from "lucide-react";
-import { Project, User } from "@/types";
-import { RootState } from "@/store/store";
-import { useSelector } from "react-redux";
-import { useProject } from "@/hooks/useProjects";
+import { Project } from "@/types";
 import { DotsThree } from "phosphor-react";
 import { useNavigate } from "react-router-dom";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteProjectById } from "@/api/project-api";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogPortal, AlertDialogOverlay, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialog } from "../ui/alert-dialog";
+import { DropdownMenuItem, DropdownMenuTrigger, DropdownMenuContent, DropdownMenu } from "../ui/dropdown-menu"
+import { toast } from "sonner"
 interface AlertDialogProps {
   setOpenDropdown: React.Dispatch<React.SetStateAction<boolean>>;
   project: Project;
 }
 
 const AlertDialogDelete = ({ setOpenDropdown, project }: AlertDialogProps) => {
-  const user = useSelector((state: RootState) => state.user.userData) as User;
-  const { handleDeleteProject } = useProject(user.id);
+
+  const queryClient = useQueryClient();
 
   const latestVersion = project.versions.reduce((latest, current) => {
     return parseFloat(current.version) > parseFloat(latest.version)
@@ -25,38 +24,55 @@ const AlertDialogDelete = ({ setOpenDropdown, project }: AlertDialogProps) => {
       : latest;
   }, project.versions[0]);
 
+  const { mutateAsync: deleteProjectByIdFn, isPending } = useMutation({
+    mutationFn: (id: string) => deleteProjectById(id),
+  })
+
+
+  async function handleDeleteProjectById(projectId: string) {
+    try {
+      await deleteProjectByIdFn(projectId)
+      queryClient.invalidateQueries({ queryKey: ["get-projects"] })
+      toast.success("Projeto deletado com sucesso.")
+    } catch {
+      toast.error("Houve um erro ao tentar deletar, tente novamente.")
+    }
+
+  }
+
   return (
-    <AlertDialog.Portal>
-      <AlertDialog.Overlay className="fixed inset-0 bg-black/50" />
-      <AlertDialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
-        <AlertDialog.Title className="text-lg font-bold">
+    <AlertDialogPortal>
+      <AlertDialogOverlay className="fixed inset-0 bg-black/50" />
+      <AlertDialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
+        <AlertDialogTitle className="text-lg font-bold">
           Confirmar Exclusão
-        </AlertDialog.Title>
-        <AlertDialog.Description className="text-gray-600">
+        </AlertDialogTitle>
+        <AlertDialogDescription className="text-gray-600">
           Tem certeza que deseja deletar o{" "}
           <strong>{latestVersion?.title}</strong>?
-        </AlertDialog.Description>
+        </AlertDialogDescription>
         <div className="flex justify-end gap-2 mt-4">
-          <AlertDialog.Cancel asChild>
+          <AlertDialogCancel asChild>
             <Button variant="ghost" className="border border-black">Cancelar</Button>
-          </AlertDialog.Cancel>
-          <AlertDialog.Action
+          </AlertDialogCancel>
+          <AlertDialogAction
             asChild
             onClick={() => {
               setTimeout(() => setOpenDropdown(false), 100);
             }}
           >
             <Button
-              onClick={() => handleDeleteProject(project.id)}
+              disabled={isPending}
+              onClick={() => handleDeleteProjectById(project.id)}
               variant="destructive"
               className="bg-red-500 text-white"
             >
               Deletar
             </Button>
-          </AlertDialog.Action>
+          </AlertDialogAction>
         </div>
-      </AlertDialog.Content>
-    </AlertDialog.Portal>
+      </AlertDialogContent>
+    </AlertDialogPortal>
   );
 };
 
@@ -70,41 +86,41 @@ export function DropdownWithModal({ project }: DropdownWithModalProps) {
   const [openDropdown, setOpenDropdown] = useState(false);
 
   function handleGoToEditProject(id: string) {
-    if(!id) return
+    if (!id) return
     navigate(`/project/${id}`);
   }
 
-  const handleMeetPhasesProject = () =>{
-    if(!project.id) return
+  const handleMeetPhasesProject = () => {
+    if (!project.id) return
     return navigate(`/meeting/${project.id}`)
   }
 
   return (
-    <DropdownMenu.Root open={openDropdown} onOpenChange={setOpenDropdown}>
-      <DropdownMenu.Trigger asChild>
+    <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
+      <DropdownMenuTrigger asChild>
         <Button variant="ghost">
           <DotsThree size={24} />
         </Button>
-      </DropdownMenu.Trigger>
+      </DropdownMenuTrigger>
 
-      <DropdownMenu.Content
+      <DropdownMenuContent
         className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md border border-gray-300 p-2 z-50"
         align="end"
       >
-        <DropdownMenu.Item onClick={() => handleGoToEditProject(project.id)} className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200">
+        <DropdownMenuItem onClick={() => handleGoToEditProject(project.id)} className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200">
           <Pencil size={18} />
           Editar
-        </DropdownMenu.Item>
+        </DropdownMenuItem>
 
-        <DropdownMenu.Item 
+        <DropdownMenuItem
           className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-200"
           onClick={() => handleMeetPhasesProject()}
         >
           <Calendar size={18} />
           Meet
-        </DropdownMenu.Item>
+        </DropdownMenuItem>
 
-        <DropdownMenu.Item
+        <DropdownMenuItem
           className="flex items-center gap-2 p-2 cursor-pointer text-red-500 hover:bg-gray-200"
           onClick={() => {
             setOpenDialog(true);
@@ -113,15 +129,15 @@ export function DropdownWithModal({ project }: DropdownWithModalProps) {
         >
           <Trash size={18} />
           Deletar
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
 
-      <AlertDialog.Root open={openDialog} onOpenChange={setOpenDialog}>
+      <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
         <AlertDialogDelete
           setOpenDropdown={setOpenDropdown}
           project={project}
         />
-      </AlertDialog.Root>
-    </DropdownMenu.Root>
+      </AlertDialog>
+    </DropdownMenu>
   );
 }
