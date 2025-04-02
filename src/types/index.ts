@@ -75,20 +75,34 @@ export interface AgendaType {
   activated: boolean;
 }
 
-export interface MeetType {
+export type MeetType = {
+  id: string;
   title: string;
-  meetObjectiveId: number;
-  meetDate: string; 
-  meetTimeStart: string; 
+  meetObjective: {
+    id: string;
+    name: string;
+    description: string;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  meetObjectiveId: string;
+  meetDate: string;
+  meetTimeStart: string;
   meetTimeFinish: string;
   moderator: string;
-  participants: string[];
-  agendas: {
+  participants: User[];
+  agendas: Array<{
+    id: string;
     name: string;
-    agendaTypeId: number;
-  }[];
+    createdAt: string;
+    agendaType: {
+      id: string;
+      name: string;
+      createdAt: string;
+      activated: boolean;
+    };
+    agendaTypeId: string;
+  }>;
   projectPhaseId: string;
-}
-
-
-
+};

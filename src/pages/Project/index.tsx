@@ -414,6 +414,7 @@ export function Project() {
                 placeholder="Data"
                 id="start-date"
                 type="date"
+                min={new Date().toISOString().split("T")[0]}
               />
             </form>
           </div>
@@ -436,7 +437,7 @@ export function Project() {
           </div>
           <Button
             onClick={() => addNewPhase(PhaseType.PROJECT)}
-            className="mt-4"
+            className="mt-4 text-white"
           >
             <Plus className="mr-2 h-4 w-4" /> Adicionar Fase
           </Button>
@@ -478,7 +479,7 @@ export function Project() {
           </div>
           <Button
             onClick={() => addNewPhase(PhaseType.CONSTRUCTION)}
-            className="mt-4"
+            className="mt-4 text-white"
           >
             <Plus className="mr-2 h-4 w-4" /> Adicionar Fase
           </Button>

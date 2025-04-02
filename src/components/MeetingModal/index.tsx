@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getMeetingsObjectives } from "@/api/meet-api/get-meeting-objectives";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -17,7 +18,6 @@ import { getUsers } from "@/api/meet-api/get-users";
 import { getAgendas } from "@/api/meet-api/get-agendas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createMeeting } from "@/api/meet-api/create-meeting";
-import { MeetType } from "@/types";
 import { useState } from "react";
 
 interface MeetingModalProps {
@@ -36,11 +36,27 @@ const newMeeting = z.object({
   meetingAgenda: z.string().min(1, "Informe a pauta da reunião."),
 });
 
+interface NewMeetProps {
+  title: string;
+  meetObjectiveId: string;
+  meetDate: string;
+  meetTimeStart: string;
+  meetTimeFinish: string;
+  moderator: string;
+  participants: string[];
+  agendas: {
+    name: string;
+    agendaTypeId: string;
+  }[];
+  projectPhaseId: string;
+}
+
 type NewMeetingFormType = z.infer<typeof newMeeting>;
 
 export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
-  const [inputValue, setInputValue] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
   const { register, handleSubmit, control } = useForm<NewMeetingFormType>({
     resolver: zodResolver(newMeeting),
   });
@@ -59,13 +75,17 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
   });
 
   const { mutateAsync: createMeetingFn } = useMutation({
-    mutationFn: (meet: MeetType) => createMeeting(meet),
+    mutationFn: (meet: NewMeetProps) => createMeeting(meet),
+  });
+
+  const filteredParticipants = participants?.filter((participant) => {
+    return participant.name.toLowerCase().includes(query.toLowerCase());
   });
 
   async function handleCreateMeeting(data: NewMeetingFormType) {
     const agenda = JSON.parse(data.meetingAgenda);
 
-    const meetData = {
+    const meetData: NewMeetProps = {
       title: data.title,
       meetObjectiveId: data.meetingType,
       meetDate: data.meetingDate,
@@ -81,8 +101,8 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
       ],
       projectPhaseId: projectPhaseId,
     };
-
     await createMeetingFn(meetData);
+    toast.success("Reunião criada com sucesso!");
   }
 
   return (
@@ -176,41 +196,51 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
             <div className="flex flex-col gap-3">
               <Label className="text-sm font-medium">Participantes</Label>
               <Input
-                type="text"
-                placeholder="Digite algo..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onFocus={() => {
-                  setIsOpen(true);
-                }}
-                onBlur={() => setTimeout(() => setIsOpen(false), 200)} // Fecha o select ao perder o foco
-                className="flex-1"
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setOpen(true)}
+                placeholder="Digite o participante"
+                value={query}
               />
+
               {isOpen && (
-                <Controller
-                  name="participants"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecione um participante" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-100">
-                        {participants?.map((participant) => {
-                          return (
-                            <SelectItem value={participant.id}>
-                              {participant.name}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <div className="w-full flex flex-col gap-2">
+                  <ul className="bg-gray-300 p-3 rounded-md flex flex-col gap-4">
+                    {filteredParticipants?.map((participant) => {
+                      return (
+                        <li
+                          onClick={() => setQuery(participant.name)}
+                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-md"
+                        >
+                          {participant.name}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               )}
+              {/* <Controller
+                name="participants"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione um participante" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-100">
+                      {participants?.map((participant) => {
+                        return (
+                          <SelectItem value={participant.id}>
+                            {participant.name}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
+              /> */}
             </div>
           </div>
           <div>
