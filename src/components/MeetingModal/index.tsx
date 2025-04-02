@@ -19,6 +19,7 @@ import { getAgendas } from "@/api/meet-api/get-agendas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createMeeting } from "@/api/meet-api/create-meeting";
 import { useState } from "react";
+import { AgendaType, User } from "@/types";
 
 interface MeetingModalProps {
   onClose: () => void;
@@ -32,8 +33,10 @@ const newMeeting = z.object({
   meetingHourFinish: z.string().min(1, "Informe a hora de fim da reunião."),
   meetingHourStart: z.string().min(1, "Informe a hora de inicio da reunião."),
   moderator: z.string().min(1, "Informe o moderador da reunião."),
-  participants: z.string().min(1, "Informe o participante da reunião."),
-  meetingAgenda: z.string().min(1, "Informe a pauta da reunião."),
+  meetingAgendaName: z.string().min(1, "Informe a pauta da reunião."),
+  meetingAgendaTypeId: z.array(
+    z.string().min(1, "Informe a pauta da reunião.")
+  ),
 });
 
 interface NewMeetProps {
@@ -56,10 +59,18 @@ type NewMeetingFormType = z.infer<typeof newMeeting>;
 export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
   const [isOpen, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-
-  const { register, handleSubmit, control } = useForm<NewMeetingFormType>({
+  const [selectedParticipants, setSelectedParticipants] = useState<User[]>([]);
+  const [pautas, setPautas] = useState<AgendaType[]>([]);
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<NewMeetingFormType>({
     resolver: zodResolver(newMeeting),
   });
+
+  console.log(errors);
 
   const { data: meetingObjectives } = useQuery({
     queryFn: getMeetingsObjectives,
@@ -82,9 +93,11 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
     return participant.name.toLowerCase().includes(query.toLowerCase());
   });
 
-  async function handleCreateMeeting(data: NewMeetingFormType) {
-    const agenda = JSON.parse(data.meetingAgenda);
+  function handleAddPautas(agenda: AgendaType) {
+    setPautas([...pautas, agenda]);
+  }
 
+  async function handleCreateMeeting(data: NewMeetingFormType) {
     const meetData: NewMeetProps = {
       title: data.title,
       meetObjectiveId: data.meetingType,
@@ -92,11 +105,11 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
       meetTimeStart: data.meetingHourStart,
       meetTimeFinish: data.meetingHourFinish,
       moderator: data.moderator,
-      participants: [data.participants],
+      participants: selectedParticipants.map((p) => p.id),
       agendas: [
         {
-          name: agenda.name,
-          agendaTypeId: agenda.id,
+          name: data.meetingAgendaName,
+          agendaTypeId: data.meetingAgendaTypeId,
         },
       ],
       projectPhaseId: projectPhaseId,
@@ -104,6 +117,24 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
     await createMeetingFn(meetData);
     toast.success("Reunião criada com sucesso!");
   }
+
+  // Adiciona ou remove um participante da lista
+  const handleSelectParticipant = (participant: User) => {
+    setSelectedParticipants((prev) => {
+      // Verifica se o participante já foi adicionado
+      if (prev.some((p) => p.id === participant.id)) {
+        return prev.filter((p) => p.id !== participant.id);
+      }
+      return [...prev, participant];
+    });
+
+    setQuery("");
+    setOpen(false);
+  };
+
+  const handleRemoveParticipant = (id: string) => {
+    setSelectedParticipants((prev) => prev.filter((p) => p.id !== id));
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center w-full h-screen bg-black bg-opacity-50 z-50">
@@ -194,32 +225,66 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
             />
 
             <div className="flex flex-col gap-3">
-              <Label className="text-sm font-medium">Participantes</Label>
+              <label className="text-sm font-medium">Participantes</label>
+
               <Input
+                type="text"
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setOpen(true)}
                 placeholder="Digite o participante"
                 value={query}
+                className="border p-2 rounded-md"
               />
 
-              {isOpen && (
-                <div className="w-full flex flex-col gap-2">
-                  <ul className="bg-gray-300 p-3 rounded-md flex flex-col gap-4">
-                    {filteredParticipants?.map((participant) => {
-                      return (
+              {/* Lista de participantes selecionados */}
+              <div className="flex flex-wrap gap-2">
+                {selectedParticipants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center gap-2 bg-gray-200 px-2 py-1 rounded-md"
+                  >
+                    <span>{participant.name} -</span>
+                    <span className="">{participant.role.name}</span>
+                    <button
+                      onClick={() => handleRemoveParticipant(participant.id)}
+                      className="text-red-500 font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Dropdown de sugestões */}
+              {isOpen &&
+                query &&
+                filteredParticipants &&
+                filteredParticipants?.length > 0 && (
+                  <div className="w-full flex flex-col gap-2">
+                    <ul className="bg-white shadow-xl p-2 rounded-md flex flex-col gap-4">
+                      {filteredParticipants.map((participant) => (
                         <li
-                          onClick={() => setQuery(participant.name)}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-md"
+                          key={participant.id}
+                          onClick={() => handleSelectParticipant(participant)}
+                          className="flex font-semibold items-center gap-2 cursor-pointer hover:bg-gray-200 p-2 rounded-md"
                         >
                           {participant.name}
                         </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-              {/* <Controller
-                name="participants"
+                      ))}
+                    </ul>
+                  </div>
+                )}
+            </div>
+          </div>
+          <div>
+            <Label className="text-sm font-medium">Pautas</Label>
+            <div className="flex gap-3">
+              <Input
+                {...register("meetingAgendaName")}
+                placeholder="Titulo da pauta"
+              />
+              <Controller
+                name="meetingAgendaTypeId"
                 control={control}
                 render={({ field }) => (
                   <Select
@@ -227,47 +292,22 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
                     defaultValue={field.value}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um participante" />
+                      <SelectValue placeholder="Selecione uma pauta" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-100">
-                      {participants?.map((participant) => {
+                      {pautas?.map((agenda) => {
                         return (
-                          <SelectItem value={participant.id}>
-                            {participant.name}
+                          <SelectItem value={agenda.id}>
+                            {agenda.name}
                           </SelectItem>
                         );
                       })}
                     </SelectContent>
                   </Select>
                 )}
-              /> */}
+              />
+              <Button onClick={handleAddPautas} className="text-white bg-black">Adicionar</Button>
             </div>
-          </div>
-          <div>
-            <Label className="text-sm font-medium">Pautas</Label>
-            <Controller
-              name="meetingAgenda"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione uma pauta" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-100">
-                    {pautas?.map((agenda) => {
-                      return (
-                        <SelectItem value={JSON.stringify(agenda)}>
-                          {agenda.name}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              )}
-            />
           </div>
           <div className="w-full flex justify-end gap-2">
             <Button
@@ -278,7 +318,7 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
             </Button>
             <Button
               type="submit"
-              className="flex gap-2 items-center rounded-md border bg-primary text-white px-4 py-2"
+              className="flex gap-2 items-center rounded-md border bg-black text-white px-4 py-2"
             >
               Criar Reunião
             </Button>
