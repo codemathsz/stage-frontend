@@ -6,7 +6,7 @@ interface PhaseMeetingCardProps {
 }
 
 export function PhaseMeetingCard({ meeting }: PhaseMeetingCardProps) {
-  console.log(meeting);
+ 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
       <div className="w-full flex flex-col gap-3">

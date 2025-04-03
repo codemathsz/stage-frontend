@@ -1,4 +1,4 @@
-import {  ProjectPhase } from "@/types";
+import { ProjectPhase } from "@/types";
 import { Plus } from "lucide-react";
 import { PhaseMeetingCard } from "../phase-meeting-card";
 import { useState } from "react";
@@ -22,7 +22,6 @@ export function PhaseMeetingComponent({ projectPhase }: PhaseMeetingProps) {
     queryFn: () => getPhase(projectPhase.id),
   });
 
-  console.log(meetingsByPhase);
   return (
     <div className="w-full p-4 rounded-lg bg-gray-100 gap-4">
       <div className="w-full flex justify-between mb-8">
@@ -43,8 +42,8 @@ export function PhaseMeetingComponent({ projectPhase }: PhaseMeetingProps) {
       <div className="w-full grid grid-cols-3 gap-4">
         {meetingsByPhase?.map((meet) => {
           return (
-            <div className="col-span-1">
-              <PhaseMeetingCard key={meet.id} meeting={meet} />
+            <div key={meet.id} className="col-span-1">
+              <PhaseMeetingCard meeting={meet} />
             </div>
           );
         })}

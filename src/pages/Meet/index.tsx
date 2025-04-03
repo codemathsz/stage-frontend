@@ -73,9 +73,9 @@ export function Meet() {
           <div className="w-full flex flex-col gap-4">
             <p className="font-poppin text-xl font-medium">Etapas</p>
             <div className="w-full flex flex-col gap-4">
-              {latestVersion?.phases.map((phase, _index) => {
+              {latestVersion?.phases.map((phase) => {
                 return (
-                  <PhaseMeetingComponent key={_index} projectPhase={phase} />
+                  <PhaseMeetingComponent key={phase.id} projectPhase={phase} />
                 );
               })}
             </div>

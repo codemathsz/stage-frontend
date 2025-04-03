@@ -98,7 +98,7 @@ export function Project() {
 
   const cep = watch("cep");
 
-  console.log(currentVersion)
+  
 
   useEffect(() => {
     if (cep?.length >= 8) {

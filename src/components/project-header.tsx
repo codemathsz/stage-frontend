@@ -13,7 +13,6 @@ interface ProjectHeaderProps {
 
 export function ProjectHeader({project, projectData, onUpdate, onUpdateProject }: ProjectHeaderProps) {
 
-  console.log(projectData)
   const [isEditing, setIsEditing] = useState(false)
 
   const handleChangeProject = (field: keyof Project, value: string | Date) => {
