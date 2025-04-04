@@ -2,7 +2,7 @@ import { Label } from "@radix-ui/react-label";
 import { Input } from "../ui/input";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { UserRound, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMeetingsObjectives } from "@/api/meet-api/get-meeting-objectives";
@@ -18,12 +18,9 @@ import { getUsers } from "@/api/meet-api/get-users";
 import { getAgendas } from "@/api/meet-api/get-agendas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createMeeting } from "@/api/meet-api/create-meeting";
-import { useState } from "react";
-import { User } from "@/types";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { useRef, useState } from "react";
+import { MeetType, User } from "@/types";
 import { Command, CommandInput, CommandItem, CommandList } from "../ui/command";
-
 
 interface MeetingModalProps {
   onClose: () => void;
@@ -59,7 +56,7 @@ const newMeeting = z.object({
         agendaTypeId: z.string().min(1, "O tipo da pauta é obrigatório"),
       })
     )
-    .min(1, "Adicione pelo menos uma pauta")
+    .min(1, "Adicione pelo menos uma pauta"),
 });
 
 interface NewMeetProps {
@@ -80,15 +77,20 @@ interface NewMeetProps {
 type NewMeetingFormType = z.infer<typeof newMeeting>;
 
 type AgendaObject = {
-  name: string,
-  agendaTypeId: string
-}
+  name: string;
+  agendaTypeId: string;
+  updateMeeting: MeetType;
+};
 
 export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
-  const [isOpen, setOpen] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const [blurTimeout, setBlurTimeout] = useState<number | null>(null);
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const [selectedParticipants, setSelectedParticipants] = useState<User[]>([]);
-  const [selectedPautasAdd, setSelectedPautasAdd] = useState<AgendaObject[]>([]);
+  const [selectedPautasAdd, setSelectedPautasAdd] = useState<AgendaObject[]>(
+    []
+  );
   const {
     register,
     handleSubmit,
@@ -102,11 +104,10 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
       participants: [],
       pautas: [],
     },
-
-    mode: "onChange"
+    mode: "onChange",
   });
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const { data: meetingObjectives } = useQuery({
     queryFn: getMeetingsObjectives,
@@ -127,22 +128,19 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
 
   const filteredParticipants =
     query === ""
-      ? participants // Mostra todos os participantes ao abrir
+      ? participants
       : participants?.filter((participant) =>
-        participant.name.toLowerCase().includes(query.toLowerCase())
-      );
-
-
-
+          participant.name.toLowerCase().includes(query.toLowerCase())
+        );
 
   function handleAddPautas() {
     const agendaName = watch("meetingAgendaName");
     const agendaTypeId = watch("meetingAgendaTypeId");
 
     if (!agendaName || !agendaTypeId) {
-      toast.warning("Informe o titulo e o tipo da pauta.")
+      toast.warning("Informe o titulo e o tipo da pauta.");
       return;
-    };
+    }
 
     const agendaObj = {
       name: agendaName,
@@ -155,7 +153,6 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
       return updatedPautas;
     });
   }
-
 
   async function handleCreateMeeting(data: NewMeetingFormType) {
     const meetData: NewMeetProps = {
@@ -170,12 +167,12 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
       projectPhaseId: projectPhaseId,
     };
     await createMeetingFn(meetData);
-    queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] })
+    queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
     toast.success("Reunião criada com sucesso!");
-    onClose()
+    onClose();
   }
 
-  const handleSelectParticipant = (participant: User) => {
+  function handleSelectParticipant(participant: User) {
     setSelectedParticipants((prev) => {
       let updatedParticipants;
 
@@ -183,28 +180,28 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
         updatedParticipants = prev.filter((p) => p.id !== participant.id);
       } else {
         updatedParticipants = [...prev, participant];
+        setFocus(false);
       }
 
       setValue("participants", updatedParticipants);
       return updatedParticipants;
     });
-
     setQuery("");
-    setOpen(false);
-  };
-
-  console.log(filteredParticipants)
-
-
-  const handleRemoveParticipant = (id: string) => {
-    setSelectedParticipants((prev) => prev.filter((participant) => participant.id !== id));
-  };
-
-  function handleDeletePauta(id: string) {
-    setSelectedPautasAdd((prev) => prev.filter((pauta) => pauta.agendaTypeId !== id))
+    inputRef.current?.blur();
   }
 
-  console.log(selectedParticipants)
+  function handleRemoveParticipant(id: string) {
+    setSelectedParticipants((prev) =>
+      prev.filter((participant) => participant.id !== id)
+    );
+  }
+
+  function handleDeletePauta(id: string) {
+    setSelectedPautasAdd((prev) =>
+      prev.filter((pauta) => pauta.agendaTypeId !== id)
+    );
+    setValue("pautas", []);
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center w-full h-screen bg-black bg-opacity-50 z-50">
@@ -217,7 +214,7 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
           onSubmit={handleSubmit(handleCreateMeeting)}
           className="w-full flex flex-col gap-4"
         >
-          <div >
+          <div>
             <Label className="text-sm font-medium">Titulo da reunião</Label>
             <Input
               required
@@ -225,22 +222,19 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
               placeholder="Titulo da reunião"
               className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
             />
-
           </div>
           <div>
             <Label className="text-sm font-medium">Objetivo da reunião</Label>
             <Controller
-
               name="meetingType"
               control={control}
               render={({ field }) => (
                 <Select
-
                   required
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
-                  <SelectTrigger className="w-full bg-transparent">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o objetivo" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-100">
@@ -255,11 +249,10 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
                 </Select>
               )}
             />
-
           </div>
           <div className="w-full flex flex-col items-start gap-4">
             <div className="w-full">
-              <Label className="text-sm font-medium">Data</Label>
+              <Label className="text-sm font-medium">Data da reunião</Label>
               <Input
                 required
                 type="date"
@@ -268,7 +261,6 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
                 className="bg-transparent placeholder:text-gray-500 focus:border-none w-full"
                 min={new Date().toISOString().split("T")[0]}
               />
-
             </div>
           </div>
           <div className="w-full flex items-center justify-between gap-4">
@@ -281,7 +273,6 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
                 placeholder="10:00"
                 className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
               />
-
             </div>
             <div className="w-1/2">
               <Label className="text-sm font-medium">
@@ -294,10 +285,7 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
                 placeholder="11:00"
                 className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
               />
-
             </div>
-
-
           </div>
           <div>
             <Label className="text-sm font-medium ">Moderador</Label>
@@ -308,41 +296,72 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
               className="bg-transparent placeholder:text-gray-500 focus:border-none col-span-3"
             />
 
-            <div className="w-full">
+            <div className="w-full mt-3">
               <label className="text-sm font-medium">Participantes</label>
 
-              <Popover open={isOpen} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={isOpen} className="w-full justify-between">
-                    Selecione um participante
-                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-[500px] z-50 mt-1 p-0 border border-black bg-gray-200 shadow-lg rounded-md">
-                  <Command>
-                    <CommandInput placeholder="Digite para buscar..." value={query} onValueChange={setQuery} />
-                    <CommandList>
-                      {filteredParticipants?.map((participant) => (
+              <Command className="border">
+                <CommandInput
+                  ref={inputRef}
+                  placeholder="Digite para buscar um participante"
+                  value={query}
+                  onFocus={() => setFocus(true)}
+                  onValueChange={setQuery}
+                  onBlur={() => {
+                    setBlurTimeout(
+                      window.setTimeout(() => setFocus(false), 200)
+                    );
+                  }}
+                />
+                {focus &&
+                  filteredParticipants &&
+                  filteredParticipants.length > 0 && (
+                    <CommandList
+                      onMouseDown={(e) => e.preventDefault()}
+                      className="bg-gray-100 border rounded-b-md shadow-md"
+                    >
+                      {filteredParticipants.map((participant) => (
                         <CommandItem
-                        className="cursor-pointer hover:bg-gray-50"
+                          className="cursor-pointer hover:bg-gray-50"
                           key={participant.id}
                           value={participant.name}
+                          onMouseDown={() => {
+                            if (blurTimeout) clearTimeout(blurTimeout);
+                          }}
                           onSelect={() => {
                             handleSelectParticipant(participant);
-                            setOpen(false);
+                            setQuery("");
+                            setFocus(false);
                           }}
                         >
-                          <Check
-                            className={`mr-2 h-4 w-4 
-                              }`}
-                          />
+                          <UserRound className="mr-2 h-4 w-4" />
                           {participant.name}
                         </CommandItem>
                       ))}
                     </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                  )}
+              </Command>
+
+              {errors.participants?.message && (
+                <Label className="text-sm text-red-500">
+                  {errors.participants?.message}
+                </Label>
+              )}
+
+              {selectedParticipants && selectedParticipants.length > 0 && (
+                <h2 className="mt-2">Participantes selecionados:</h2>
+              )}
+
+              {selectedParticipants?.map((participant) => (
+                <div className="flex items-center gap-2">
+                  <li className="mt-2">{participant.name}</li>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveParticipant(participant.id)}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
           <div>
@@ -359,11 +378,10 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
                 control={control}
                 render={({ field }) => (
                   <Select
-                    required
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
-                    <SelectTrigger className="w-full  bg-transparent">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione uma pauta" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-100">
@@ -376,32 +394,40 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
                       })}
                     </SelectContent>
                   </Select>
-
                 )}
               />
 
-              <Button type="button" onClick={() => handleAddPautas()} className="text-white bg-black">Adicionar</Button>
+              <Button
+                type="button"
+                onClick={() => handleAddPautas()}
+                className="text-white bg-black"
+              >
+                Adicionar
+              </Button>
             </div>
-            {
-              errors?.pautas && (
-                <Label className="text-sm text-red-500">{errors.pautas.message}</Label>
-              )
-            }
+            {errors?.pautas && (
+              <Label className="text-sm text-red-500">
+                {errors.pautas.message}
+              </Label>
+            )}
           </div>
-          {
-            selectedPautasAdd?.map((pautaAdd) => {
-              return (
-                <ul className="bg-green-300 max-w-52 rounded-md px-2 py-1" key={pautaAdd.name}>
-                  <li className="flex gap-2 justify-center items-center">{pautaAdd.name}
-                    <button onClick={() => handleDeletePauta(pautaAdd.agendaTypeId)}>
-                      <X className="text-red-500" />
-                    </button>
-                  </li>
-
-                </ul>
-              )
-            })
-          }
+          {selectedPautasAdd?.map((pautaAdd) => {
+            return (
+              <ul
+                className="bg-gray-200 max-w-52 rounded-md px-2 py-1"
+                key={pautaAdd.name}
+              >
+                <li className="flex gap-2 justify-center items-center">
+                  {pautaAdd.name}
+                  <button
+                    onClick={() => handleDeletePauta(pautaAdd.agendaTypeId)}
+                  >
+                    <X className="" />
+                  </button>
+                </li>
+              </ul>
+            );
+          })}
           <div className="w-full flex justify-end gap-2">
             <Button
               className="flex gap-2 items-center rounded-md border hover:bg-gray-200 border-gray-200 bg-white px-4 py-2"
@@ -418,6 +444,6 @@ export function MeetingModal({ onClose, projectPhaseId }: MeetingModalProps) {
           </div>
         </form>
       </div>
-    </div >
+    </div>
   );
 }
