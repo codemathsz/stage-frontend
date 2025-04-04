@@ -17,6 +17,6 @@ export interface UpdateMeetProps {
   projectPhaseId: string;
 }
 
-export async function updateMeeting(meet: UpdateMeetProps) {
-  await API.post<MeetType>("api/meet", meet);
+export async function updateMeetingApi(meet: UpdateMeetProps) {
+  await API.put<MeetType>("api/meet", meet);
 }
