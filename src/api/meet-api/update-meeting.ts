@@ -1,5 +1,4 @@
 import { API } from "@/lib/axios";
-import { MeetType } from "@/types";
 
 export interface UpdateMeetProps {
   title: string;
@@ -18,5 +17,5 @@ export interface UpdateMeetProps {
 }
 
 export async function updateMeetingApi(meet: UpdateMeetProps) {
-  await API.put<MeetType>("api/meet", meet);
+  await API.put<UpdateMeetProps>("api/meet", meet);
 }
