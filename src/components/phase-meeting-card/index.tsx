@@ -14,8 +14,6 @@ export function PhaseMeetingCard({ meeting }: PhaseMeetingCardProps) {
     setOpenModal(!openModal);
   };
 
-  console.log(meeting)
-
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
       <div className="w-full flex flex-col gap-3">
@@ -44,7 +42,8 @@ export function PhaseMeetingCard({ meeting }: PhaseMeetingCardProps) {
       </div>
       {openModal && (
         <MeetingModal
-        updateMeetingData={meeting}
+          isOpen={openModal}
+          updateMeetingData={meeting}
           projectPhaseId={meeting.projectPhaseId}
           onClose={() => handleOpenModal()}
         />

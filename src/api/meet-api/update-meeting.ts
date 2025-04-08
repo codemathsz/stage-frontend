@@ -9,13 +9,18 @@ export interface UpdateMeetProps {
   moderator: string;
   participants: string[];
   agendas: {
-    id:string
+    id: string;
     name: string;
     agendaTypeId: string;
   }[];
   projectPhaseId: string;
 }
 
-export async function updateMeetingApi(meet: UpdateMeetProps) {
-  await API.put<UpdateMeetProps>("api/meet", meet);
+export interface UpdateMeetingParams {
+  id: string;
+  meet: UpdateMeetProps;
+}
+
+export async function updateMeetingApi({ meet, id }: UpdateMeetingParams) {
+  await API.put<UpdateMeetProps>(`api/meet/${id}`, meet);
 }

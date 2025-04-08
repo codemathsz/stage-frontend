@@ -2,7 +2,14 @@ import { Label } from "@radix-ui/react-label";
 import { Input } from "../ui/input";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
-import { ChartNoAxesColumnDecreasing, CircleUserRound, UserRound, X } from "lucide-react";
+import {
+  CircleArrowRight,
+  CircleUserRound,
+  MoveRight,
+  SquareChartGantt,
+  UserRound,
+  X,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMeetingsObjectives } from "@/api/meet-api/get-meeting-objectives";
@@ -21,10 +28,13 @@ import { createMeeting } from "@/api/meet-api/create-meeting";
 import { useEffect, useRef, useState } from "react";
 import { MeetType, User } from "@/types";
 import { Command, CommandInput, CommandItem, CommandList } from "../ui/command";
-import { updateMeetingApi } from "@/api/meet-api/update-meeting";
-
+import {
+  updateMeetingApi,
+  UpdateMeetingParams,
+} from "@/api/meet-api/update-meeting";
 
 interface MeetingModalProps {
+  isOpen?: boolean;
   onClose: () => void;
   projectPhaseId: string;
   updateMeetingData?: MeetType;
@@ -37,12 +47,12 @@ const newMeeting = z.object({
   meetingHourFinish: z.string().min(1, "Informe a hora de fim da reunião."),
   meetingHourStart: z.string().min(1, "Informe a hora de inicio da reunião."),
   moderator: z.string().min(1, "Informe o moderador da reunião."),
-  meetingAgendaName: z.string().min(1, "Informe a pauta da reunião."),
-  meetingAgendaTypeId: z.string().min(1, "Informe a pauta da reunião."),
+  meetingAgendaName: z.string().optional(),
+  meetingAgendaTypeId: z.string().optional(),
   participants: z
     .array(
       z.object({
-        id: z.string(), // ou `z.number()` dependendo do tipo real do ID
+        id: z.string(),
         name: z.string().min(1, "Nome é obrigatório"),
         role: z.object({
           id: z.string(),
@@ -51,9 +61,7 @@ const newMeeting = z.object({
       })
     )
     .min(1, "É necessário adicionar pelo menos um participante"),
-
   pautas: z
-
     .array(
       z.object({
         name: z.string().min(1, "O título da pauta é obrigatório"),
@@ -72,22 +80,7 @@ interface NewMeetProps {
   moderator: string;
   participants: string[];
   agendas: {
-    name: string;
-    agendaTypeId: string;
-  }[];
-  projectPhaseId: string;
-}
-
-interface UpdateMeetProps {
-  title: string;
-  meetObjectiveId: string;
-  meetDate: string;
-  meetTimeStart: string;
-  meetTimeFinish: string;
-  moderator: string;
-  participants: string[];
-  agendas: {
-    id: string;
+    id?: string;
     name: string;
     agendaTypeId: string;
   }[];
@@ -101,16 +94,16 @@ type AgendaObject = {
   agendaTypeId: string;
 };
 type AgendaObjectUpdate = {
-  id: string
+  id: string;
   name: string;
   agendaTypeId: string;
 };
-
 
 export function MeetingModal({
   onClose,
   projectPhaseId,
   updateMeetingData,
+  isOpen,
 }: MeetingModalProps) {
   const [focus, setFocus] = useState(false);
   const [blurTimeout, setBlurTimeout] = useState<number | null>(null);
@@ -120,9 +113,9 @@ export function MeetingModal({
   const [selectedPautasAdd, setSelectedPautasAdd] = useState<AgendaObject[]>(
     []
   );
-  const [selectedPautasUpdate, setSelectedPautasUpdate] = useState<AgendaObjectUpdate[]>(
-    []
-  );
+  const [selectedPautasUpdate, setSelectedPautasUpdate] = useState<
+    AgendaObjectUpdate[]
+  >([]);
 
   const {
     register,
@@ -130,35 +123,35 @@ export function MeetingModal({
     control,
     watch,
     setValue,
-    reset,
+    setError,
     formState: { errors },
   } = useForm<NewMeetingFormType>({
     resolver: zodResolver(newMeeting),
     mode: "onChange",
+    defaultValues: {
+      meetingType: "",
+      meetingAgendaTypeId: "",
+    },
   });
 
-  console.log(errors)
+  console.log(errors);
+
+  // Atualiza os valores do formulário quando updateMeetingData e a modal estiver aberta
   useEffect(() => {
-    if (updateMeetingData) {
-      console.log(updateMeetingData)
-      reset({
-        participants: updateMeetingData.participants || [],
-        pautas: updateMeetingData.agendas || [],
-        title: updateMeetingData.title || "",
-        moderator: updateMeetingData.moderator || "",
-        meetingDate: updateMeetingData.meetDate || "",
-        meetingHourFinish: updateMeetingData.meetTimeFinish || "",
-        meetingHourStart: updateMeetingData.meetTimeStart || "",
-        meetingType: updateMeetingData.meetObjectiveId || "",
-        meetingAgendaName: updateMeetingData.agendas[0].name || "",
-        meetingAgendaTypeId: updateMeetingData.agendas[0].agendaTypeId || "",
-
-      });
-
+    if (isOpen && updateMeetingData) {
+      setValue("participants", updateMeetingData.participants || []);
+      setValue("pautas", updateMeetingData.agendas || []);
+      setValue("title", updateMeetingData.title || "");
+      setValue("moderator", updateMeetingData.moderator || "");
+      setValue("meetingDate", updateMeetingData.meetDate || "");
+      setValue("meetingHourFinish", updateMeetingData.meetTimeFinish || "");
+      setValue("meetingHourStart", updateMeetingData.meetTimeStart || "");
+      setValue("meetingType", String(updateMeetingData.meetObjectiveId || ""));
+      setValue("pautas", updateMeetingData.agendas);
       setSelectedParticipants(updateMeetingData.participants || []);
       setSelectedPautasUpdate(updateMeetingData.agendas || []);
     }
-  }, [updateMeetingData, reset]);
+  }, [isOpen, updateMeetingData, setValue]);
 
   const queryClient = useQueryClient();
 
@@ -179,58 +172,79 @@ export function MeetingModal({
     mutationFn: (meet: NewMeetProps) => createMeeting(meet),
   });
 
-
   const { mutateAsync: updateMeetingFn } = useMutation({
-    mutationFn: (meet: UpdateMeetProps) => updateMeetingApi(meet),
+    mutationFn: ({ meet, id }: UpdateMeetingParams) =>
+      updateMeetingApi({ meet, id }),
   });
-
-  console.log(selectedPautasUpdate)
-
 
   function handleAddPautas() {
     const agendaName = watch("meetingAgendaName");
     const agendaTypeId = watch("meetingAgendaTypeId");
 
-    if (!agendaName || !agendaTypeId) {
-      toast.warning("Informe o titulo e o tipo da pauta.");
-      return;
-    }
+    // Validação para campos obrigatórios no modo de criação
+    if (!updateMeetingData) {
+      let hasError = false;
 
-    if (updateMeetingData) {
-      
-      const pautaEncontrada = updateMeetingData.agendas.find(
-        (agenda) => agenda.agendaTypeId === agendaTypeId
-      );
-      
-      const agendaObj = {
-        id: pautaEncontrada?.id,
-        name: pautaEncontrada?.name || agendaName,
-        agendaTypeId: pautaEncontrada?.agendaTypeId || agendaTypeId,
-      };
-      
+      if (!agendaName) {
+        setError("meetingAgendaName", {
+          type: "custom",
+          message: "Informe o nome",
+        });
+        hasError = true;
+      }
 
-      setSelectedPautasUpdate((prev) => {
-        const updatedPautas = [...prev, agendaObj];
-        setValue("pautas", updatedPautas); // Atualiza no React Hook Form
-        return updatedPautas;
-      });
-    } else {
+      if (!agendaTypeId) {
+        setError("meetingAgendaTypeId", {
+          type: "custom",
+          message: "Informe o tipo da pauta",
+        });
+        hasError = true;
+      }
+
+      if (hasError) return;
+
       const agendaObj = {
         name: agendaName,
-        agendaTypeId: agendaTypeId,
+        agendaTypeId,
       };
 
       setSelectedPautasAdd((prev) => {
+        const alreadyExists = prev.some((p) => p.agendaTypeId === agendaTypeId);
+        if (alreadyExists) return prev;
         const updatedPautas = [...prev, agendaObj];
-        setValue("pautas", updatedPautas); // Atualiza no React Hook Form
+        setValue("pautas", updatedPautas);
         return updatedPautas;
       });
+
+      return;
     }
+
+    const pautaEncontrada = updateMeetingData.agendas.find(
+      (agenda) => agenda.agendaTypeId === agendaTypeId
+    );
+
+    const agendaObj = {
+      id: pautaEncontrada?.id,
+      name: pautaEncontrada?.name || agendaName,
+      agendaTypeId: pautaEncontrada?.agendaTypeId || agendaTypeId,
+    };
+
+    setSelectedPautasUpdate((prev) => {
+      const alreadyExists = prev.some(
+        (p) => p.agendaTypeId === agendaObj.agendaTypeId
+      );
+
+      if (alreadyExists) return prev;
+
+      const updatedPautas = [...prev, agendaObj];
+      setValue("pautas", updatedPautas);
+      return updatedPautas;
+    });
   }
 
   async function handleCreateAndUpdateMeeting(data: NewMeetingFormType) {
     if (updateMeetingData) {
-      const updateData: UpdateMeetProps = {
+      const updateData = {
         title: data.title,
         meetObjectiveId: data.meetingType,
         meetDate: data.meetingDate,
@@ -245,7 +259,10 @@ export function MeetingModal({
         })),
         projectPhaseId: projectPhaseId,
       };
-      await updateMeetingFn(updateData)
+      await updateMeetingFn({ meet: updateData, id: updateMeetingData.id });
+      queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
+      toast.success("Reunião atualizada com sucesso!");
+      onClose();
     } else {
       const meetData: NewMeetProps = {
         title: data.title,
@@ -302,14 +319,12 @@ export function MeetingModal({
     }
   }
 
-
-
   const filteredParticipants =
     query === ""
       ? participants
       : participants?.filter((participant) =>
-        participant.name.toLowerCase().includes(query.toLowerCase())
-      );
+          participant.name.toLowerCase().includes(query.toLowerCase())
+        );
 
   return (
     <div className="fixed inset-0 flex items-center justify-center w-full h-screen bg-black bg-opacity-50 z-50">
@@ -320,14 +335,13 @@ export function MeetingModal({
           ) : (
             <h2 className="text-2xl font-semibold">Criar reunião</h2>
           )}
-          <X size={18} className="cursor-pointer" onClick={() => onClose()} />
+          <X size={18} className="cursor-pointer" onClick={onClose} />
         </div>
         <form
           onSubmit={handleSubmit(handleCreateAndUpdateMeeting)}
           className="w-full flex flex-col gap-4"
         >
           <div>
-            {updateMeetingData?.agendas[0].id}
             <Label className="text-sm font-medium">Titulo da reunião</Label>
             <Input
               required
@@ -338,30 +352,33 @@ export function MeetingModal({
           </div>
           <div>
             <Label className="text-sm font-medium">Objetivo da reunião</Label>
-            <Controller
-              name="meetingType"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  required
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o objetivo" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-100">
-                    {meetingObjectives?.map((objective) => {
-                      return (
-                        <SelectItem value={objective.id}>
+            {meetingObjectives && (
+              <Controller
+                key={`${
+                  updateMeetingData?.meetObjectiveId || "default"
+                }-${isOpen}`}
+                name="meetingType"
+                control={control}
+                defaultValue={String(updateMeetingData?.meetObjectiveId || "")}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione o objetivo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {meetingObjectives.map((objective) => (
+                        <SelectItem
+                          key={objective.id}
+                          value={String(objective.id)}
+                        >
                           {objective.name}
                         </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            )}
           </div>
           <div className="w-full flex flex-col items-start gap-4">
             <div className="w-full">
@@ -401,7 +418,7 @@ export function MeetingModal({
             </div>
           </div>
           <div>
-            <Label className="text-sm font-medium ">Moderador</Label>
+            <Label className="text-sm font-medium">Moderador</Label>
             <Input
               required
               {...register("moderator")}
@@ -410,8 +427,7 @@ export function MeetingModal({
             />
 
             <div className="w-full mt-3">
-              <label className="text-sm font-medium">Participantes</label>
-
+              <Label className="text-sm font-medium">Participantes</Label>
               <Command className="border">
                 <CommandInput
                   ref={inputRef}
@@ -467,7 +483,10 @@ export function MeetingModal({
               )}
               <div className="w-full flex gap-2 flex-wrap">
                 {selectedParticipants?.map((participant) => (
-                  <div className="flex items-center gap-2 bg-gray-200 p-2 rounded w-auto">
+                  <div
+                    className="flex items-center gap-2 bg-gray-200 p-2 rounded w-auto"
+                    key={participant.id}
+                  >
                     <CircleUserRound className="text-blue-700" size={20} />
                     <li className="list-none font-medium">
                       {participant.name}
@@ -484,92 +503,90 @@ export function MeetingModal({
               </div>
             </div>
           </div>
-          <div>
-            <Label className="text-sm font-medium">Pautas</Label>
+          <div className="flex flex-col">
+            <Label className="text-sm font-medium">Adicionar pautas</Label>
             <div className="flex gap-3">
               <Input
                 required={!updateMeetingData}
                 {...register("meetingAgendaName")}
                 placeholder="Titulo da pauta"
-                className=" bg-transparent"
+                className="bg-transparent"
               />
               <Controller
                 name="meetingAgendaTypeId"
                 control={control}
+                defaultValue=""
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione uma pauta" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-100">
-                      {pautas?.map((agenda) => {
-                        return (
-                          <SelectItem key={agenda.id} value={agenda.id}>
-                            {agenda.name}
-                          </SelectItem>
-                        );
-                      })}
+                      {pautas?.map((agenda) => (
+                        <SelectItem key={agenda.id} value={agenda.id}>
+                          {agenda.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-
               <Button
                 type="button"
-                onClick={() => handleAddPautas()}
+                onClick={handleAddPautas}
                 className="text-white bg-black"
               >
                 Adicionar
               </Button>
             </div>
-            {errors?.pautas && (
-              <Label className="text-sm text-red-500">
+            {errors?.pautas?.message && (
+              <Label className="text-sm text-center text-red-500">
                 {errors.pautas.message}
               </Label>
             )}
           </div>
-          {selectedPautasAdd?.map((pautaAdd) => {
-            return (
-              <ul
-                className="bg-gray-200 max-w-52 rounded-md px-2 py-1"
-                key={pautaAdd.name}
-              >
-                <li className="flex gap-2 justify-center items-center">
-                  {pautaAdd.name}
-                  <button
-                    onClick={() => handleDeletePauta(pautaAdd.agendaTypeId)}
-                  >
-                    <X className="" />
-                  </button>
-                </li>
-              </ul>
-            );
-          })}
-          {selectedPautasUpdate?.map((pautaUpdate) => {
-            return (
-              <ul
-                className="bg-gray-200 max-w-52 rounded-md px-2 py-1"
-                key={pautaUpdate.id}
-              >
-                <li className="flex gap-2 justify-center items-center">
-                  {pautaUpdate.name}
-                  <button
-                    onClick={() => handleDeletePauta(pautaUpdate.agendaTypeId)}
-                  >
-                    <X className="" />
-                  </button>
-                </li>
-              </ul>
-            );
-          })}
+          {selectedPautasAdd?.map((pautaAdd) => (
+            <ul
+              className="bg-gray-200 max-w-52 rounded-md px-2 py-1"
+              key={pautaAdd.name}
+            >
+              <li className="w-full flex gap-2 justify-between items-center font-medium">
+                <SquareChartGantt className="text-blue-600" size={20} />
+                {pautaAdd.name}
+                <button
+                  title="Remover"
+                  onClick={() => handleDeletePauta(pautaAdd.agendaTypeId)}
+                >
+                  <X />
+                </button>
+              </li>
+            </ul>
+          ))}
+          {selectedPautasUpdate?.map((pautaUpdate) => (
+            <ul
+              className="bg-gray-200 max-w-52 rounded-md px-2 py-1"
+              key={pautaUpdate.id}
+            >
+              <li className="flex gap-2 justify-center items-center font-medium">
+                <CircleArrowRight size={20} />
+                {pautaUpdate.name}
+                <button
+                  title="Remover"
+                  onClick={() => handleDeletePauta(pautaUpdate.agendaTypeId)}
+                >
+                  <X />
+                </button>
+              </li>
+            </ul>
+          ))}
           <div className="w-full flex justify-end gap-2">
             <Button
               className="flex gap-2 items-center rounded-md border hover:bg-gray-200 border-gray-200 bg-white px-4 py-2"
-              onClick={() => onClose()}
+              onClick={onClose}
+              type="button"
             >
               Cancelar
             </Button>
-
             <Button
               type="submit"
               className="flex gap-2 items-center rounded-md border bg-black text-white px-4 py-2"
