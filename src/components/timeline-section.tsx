@@ -14,6 +14,13 @@ interface TimelineSectionProps {
   onDeletePhase: (id: string) => void;
 }
 
+interface MarcoAddProps {
+  id: string;
+  name?: string;
+  date?: Date;
+  projectPhaseId?: string;
+}
+
 export function TimelineSection({
   phases,
   totalWeeks,
@@ -21,7 +28,7 @@ export function TimelineSection({
   projectStartDate,
   onDeletePhase,
 }: TimelineSectionProps) {
-  const [editingPhase, setEditingPhase] = useState<string | null>(null);
+ /*  const [editingPhase, setEditingPhase] = useState<string | null>(null); */
 
   const calculatePhaseStartDate = (phaseIndex: number): string => {
     let startDate = new Date(projectStartDate);
@@ -48,7 +55,7 @@ export function TimelineSection({
   const handleIndependentChange = (
     id: string,
     isIndependent: boolean,
-    startDate?: string
+    startDate: Date
   ) => {
     const updatedPhases = phases.map((phase) =>
       phase.id === id
@@ -57,15 +64,16 @@ export function TimelineSection({
             isIndependent,
             startDate: isIndependent
               ? startDate || projectStartDate
-              : new Date().toString(),
+              : new Date(),
           }
         : phase
     );
+    console.log(updatedPhases)
     onUpdate(updatedPhases);
   };
 
-  const handleStartDateChange = (id: string, startDate: string) => {
-    if (!validateDate(startDate, projectStartDate)) {
+  const handleStartDateChange = (id: string, startDate: Date) => {
+    if (!validateDate(String(startDate), projectStartDate)) {
       alert("A data deve ser posterior à data de início do projeto");
       return;
     }
@@ -75,31 +83,33 @@ export function TimelineSection({
     onUpdate(updatedPhases);
   };
 
-  const handleAddMilestone = (phaseId: string) => {
+  const handleAddMilestone = ({
+    projectPhaseId,
+    name,
+    id,
+    date,
+  }: MarcoAddProps) => {
     const updatedPhases = phases.map((phase, index) => {
-      if (phase.id === phaseId) {
+      if (phase.id === projectPhaseId) {
         const phaseStartDate =
           phase.isIndependent && phase.startDate
             ? new Date(phase.startDate)
             : new Date(calculatePhaseStartDate(index));
 
         const newMilestoneDate = new Date(phaseStartDate);
-        newMilestoneDate.setDate(newMilestoneDate.getDate() + 1); // Set to next day
+        newMilestoneDate.setDate(newMilestoneDate.getDate() + 1);
 
         const newMilestone: Milestone = {
-          id: "",
-          name: "Novo Marco",
-
-          id: "",
-          name: "",
-
-          date: newMilestoneDate,
+          id: id,
+          name: name,
+          date: date,
           projectPhaseId: phase.id,
         };
         return { ...phase, milestones: [...phase.milestones, newMilestone] };
       }
       return phase;
     });
+    console.log(updatedPhases);
     onUpdate(updatedPhases);
   };
 
@@ -111,7 +121,7 @@ export function TimelineSection({
     const updatedPhases = phases.map((phase, phaseIndex) => {
       if (phase.id === phaseId) {
         const phaseStartDate =
-          phase.isIndependent && formatDateISO(phase.startDate)
+          phase.isIndependent && formatDateISO(String(phase.startDate))
             ? new Date(phase.startDate)
             : new Date(calculatePhaseStartDate(phaseIndex));
 
@@ -209,8 +219,8 @@ export function TimelineSection({
                     handleWeekChange(phase.id, parseInt(e.target.value) || 0)
                   }
                   className="w-20 p-1"
-                  onFocus={() => setEditingPhase(phase.id)}
-                  onBlur={() => setEditingPhase(null)}
+                 /*  onFocus={() => setEditingPhase(phase.id)}
+                  onBlur={() => setEditingPhase(null)} */
                 />
                 <span className="text-sm text-gray-600">semanas</span>
               </div>
@@ -226,6 +236,7 @@ export function TimelineSection({
               <div className="flex items-center gap-2">
                 <span className="text-sm">Independente</span>
                 <Switch
+                className="text-blue-500"
                   checked={phase.isIndependent}
                   onCheckedChange={(checked) =>
                     handleIndependentChange(phase.id, checked)
@@ -293,7 +304,7 @@ export function TimelineSection({
                       })
                     }
                     className="w-40"
-                    min={phase.startDate || projectStartDate}
+                    min={String(phase.startDate) || projectStartDate}
                   />
                   <Button
                     variant="ghost"

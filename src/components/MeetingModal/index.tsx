@@ -2,14 +2,7 @@ import { Label } from "@radix-ui/react-label";
 import { Input } from "../ui/input";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
-import {
-  CircleArrowRight,
-  CircleUserRound,
-  MoveRight,
-  SquareChartGantt,
-  UserRound,
-  X,
-} from "lucide-react";
+import { CircleUserRound, Dot, UserRound, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMeetingsObjectives } from "@/api/meet-api/get-meeting-objectives";
@@ -134,9 +127,6 @@ export function MeetingModal({
     },
   });
 
-  console.log(errors);
-
-  // Atualiza os valores do formulário quando updateMeetingData e a modal estiver aberta
   useEffect(() => {
     if (isOpen && updateMeetingData) {
       setValue("participants", updateMeetingData.participants || []);
@@ -203,18 +193,21 @@ export function MeetingModal({
 
       if (hasError) return;
 
-      const agendaObj = {
-        name: agendaName,
-        agendaTypeId,
+      const agendaObj: AgendaObject = {
+        name: agendaName ?? "",
+        agendaTypeId: agendaTypeId ?? "",
       };
 
-      setSelectedPautasAdd((prev) => {
-        const alreadyExists = prev.some((p) => p.agendaTypeId === agendaTypeId);
-        if (alreadyExists) return prev;
-        const updatedPautas = [...prev, agendaObj];
+      const alreadyExists = selectedPautasAdd.some(
+        (p) => p.agendaTypeId === agendaTypeId
+      );
+
+      if (!alreadyExists) {
+        const updatedPautas = [...selectedPautasAdd, agendaObj];
+        setSelectedPautasAdd(updatedPautas);
         setValue("pautas", updatedPautas);
-        return updatedPautas;
-      });
+        console.log(updatedPautas);
+      }
 
       return;
     }
@@ -223,23 +216,25 @@ export function MeetingModal({
       (agenda) => agenda.agendaTypeId === agendaTypeId
     );
 
-    const agendaObj = {
-      id: pautaEncontrada?.id,
-      name: pautaEncontrada?.name || agendaName,
-      agendaTypeId: pautaEncontrada?.agendaTypeId || agendaTypeId,
-    };
+    if (pautaEncontrada && agendaName && agendaTypeId) {
+      const agendaObj: AgendaObjectUpdate = {
+        id: pautaEncontrada.id ?? "",
+        name: pautaEncontrada.name || agendaName,
+        agendaTypeId: pautaEncontrada.agendaTypeId || agendaTypeId,
+      };
 
-    setSelectedPautasUpdate((prev) => {
-      const alreadyExists = prev.some(
-        (p) => p.agendaTypeId === agendaObj.agendaTypeId
-      );
+      setSelectedPautasUpdate((prev) => {
+        const alreadyExists = prev.some(
+          (p) => p.agendaTypeId === agendaObj.agendaTypeId
+        );
 
-      if (alreadyExists) return prev;
+        if (alreadyExists) return prev;
 
-      const updatedPautas = [...prev, agendaObj];
-      setValue("pautas", updatedPautas);
-      return updatedPautas;
-    });
+        const updatedPautas = [...prev, agendaObj];
+        setValue("pautas", updatedPautas);
+        return updatedPautas;
+      });
+    }
   }
 
   async function handleCreateAndUpdateMeeting(data: NewMeetingFormType) {
@@ -259,10 +254,14 @@ export function MeetingModal({
         })),
         projectPhaseId: projectPhaseId,
       };
-      await updateMeetingFn({ meet: updateData, id: updateMeetingData.id });
-      queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
-      toast.success("Reunião atualizada com sucesso!");
-      onClose();
+      try {
+        await updateMeetingFn({ meet: updateData, id: updateMeetingData.id });
+        queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
+        toast.success("Reunião atualizada com sucesso!");
+        onClose();
+      } catch {
+        toast.error("Ocorreu um erro ao atualizar, tente novamente.");
+      }
     } else {
       const meetData: NewMeetProps = {
         title: data.title,
@@ -275,10 +274,15 @@ export function MeetingModal({
         agendas: selectedPautasAdd,
         projectPhaseId: projectPhaseId,
       };
-      await createMeetingFn(meetData);
-      queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
-      toast.success("Reunião criada com sucesso!");
-      onClose();
+
+      try {
+        await createMeetingFn(meetData);
+        queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
+        toast.success("Reunião criada com sucesso!");
+        onClose();
+      } catch {
+        toast.error("Ocorreu um erro ao criar, tente novamente.");
+      }
     }
   }
 
@@ -551,7 +555,7 @@ export function MeetingModal({
               key={pautaAdd.name}
             >
               <li className="w-full flex gap-2 justify-between items-center font-medium">
-                <SquareChartGantt className="text-blue-600" size={20} />
+                <Dot className="text-blue-600" size={20} />
                 {pautaAdd.name}
                 <button
                   title="Remover"
@@ -568,7 +572,7 @@ export function MeetingModal({
               key={pautaUpdate.id}
             >
               <li className="flex gap-2 justify-center items-center font-medium">
-                <CircleArrowRight size={20} />
+                <Dot size={20} />
                 {pautaUpdate.name}
                 <button
                   title="Remover"

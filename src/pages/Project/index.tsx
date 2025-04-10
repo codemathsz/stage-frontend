@@ -18,6 +18,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import {
   createProject,
   getProjectById,
+  getProjectByUserId,
   updateProjectApi,
 } from "@/api/project-api";
 import { createVersion } from "@/api/version-api";
@@ -30,7 +31,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner"
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 interface IVersion {
   id: string;
   version: string;
@@ -44,7 +46,13 @@ const newProject = z.object({
   city: z.string().min(1, "Informe a cidade"),
   state: z.string().min(1, "Informe a UF"),
   cod: z.string().min(4, "Informe o codigo"),
-  startDate: z.string(),
+  startDate: z
+    .string()
+    .min(1, "Informe a data de início")
+    .transform((value) => new Date(value)) // transforma string em Date
+    .refine((date) => !isNaN(date.getTime()), {
+      message: "Data inválida",
+    }),
 });
 
 type NewProjectFormType = z.infer<typeof newProject>;
@@ -56,18 +64,22 @@ export function Project() {
   const [versions, setVersions] = useState<IVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<IVersion | null>(null);
   const [project, setProject] = useState<Project>();
-  const [initialProject, setInitialProject] = useState<Project>();
   const user = useSelector((state: RootState) => state.user.userData) as User;
   const [currentVersion, setCurrentVersion] = useState<ProjectVersion | null>(
     null
   );
   const [constructionStartDate, setConstructionStartDate] = useState<string>();
 
-  const { register, handleSubmit, setValue, watch, formState: { isSubmitting } } =
-    useForm<NewProjectFormType>({
-      resolver: zodResolver(newProject),
-      mode: "onSubmit",
-    });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { isSubmitting, errors },
+  } = useForm<NewProjectFormType>({
+    resolver: zodResolver(newProject),
+    mode: "onSubmit",
+  });
 
   const findLatestVersion = (
     versions: ProjectVersion[]
@@ -80,25 +92,18 @@ export function Project() {
     });
   };
 
+  const { data: projects } = useQuery({
+    queryKey: ["project", id],
+    queryFn: () => getProjectByUserId(user.id),
+  });
 
   useEffect(() => {
-    const getProject = async () => {
-      if (id) {
-        const response = await getProjectById(id);
-        handleUpdatedData(response);
-      } else {
-        if (user?.id) {
-          mockProject.userId = user.id;
-        }
-        handleUpdatedData(mockProject);
-      }
-    };
-    getProject();
-  }, [id, user]);
+    if (errors.title || errors.cep || errors.cod || errors.startDate) {
+      toast.warning("Preencha todos os campos corretamente");
+    }
+  }, [errors]);
 
   const cep = watch("cep");
-
-  
 
   useEffect(() => {
     if (cep?.length >= 8) {
@@ -128,21 +133,39 @@ export function Project() {
 
   const handleUpdatedData = (project: Project) => {
     setProject(project);
-    setInitialProject(project);
     const latestVersion = findLatestVersion(project?.versions);
-    if (latestVersion) {
-      setValue("title", latestVersion?.title);
-      setValue("cep", latestVersion?.cep);
-      setValue("address", latestVersion?.address);
-      setValue("city", latestVersion?.city);
-      setValue("state", latestVersion?.state);
-      setValue("cod", project.cod);
-      setValue("startDate", latestVersion.startDate);
-    }
     setCurrentVersion(latestVersion);
     setSelectedVersion(latestVersion);
     setVersions(handleSetVersion(project.versions));
   };
+
+  useEffect(() => {
+    const getProject = async () => {
+      if (id) {
+        const response = await getProjectById(id);
+        handleUpdatedData(response);
+      } else {
+        if (user?.id) {
+          mockProject.userId = user.id;
+        }
+        handleUpdatedData(mockProject);
+      }
+    };
+    getProject();
+  }, [id, user]);
+
+  useEffect(() => {
+    if (currentVersion) {
+      console.log(currentVersion)
+      setValue("title", currentVersion.title);
+      setValue("address", currentVersion.address);
+      setValue("cep", currentVersion.cep);
+      setValue("city", currentVersion.city);
+      setValue("state", currentVersion.state);
+      setValue("startDate", currentVersion.startDate);
+      setValue("cod", currentVersion.code);
+    }
+  }, [currentVersion, setValue, projects]);
 
   const handleSetVersion = (versions: ProjectVersion[]) => {
     return versions.map((version) => {
@@ -159,9 +182,6 @@ export function Project() {
     if (current) {
       setCurrentVersion(current);
       setSelectedVersion(current);
-      if (currentVersion) {
-        setValue("title", currentVersion.title)
-      }
     }
   };
 
@@ -174,7 +194,7 @@ export function Project() {
           updatedAt: new Date(),
         };
         setCurrentVersion(newVersion);
-        setProject((prevProject: any) => ({
+        setProject((prevProject) => ({
           ...prevProject!,
           versions: [newVersion, ...prevProject!.versions.slice(1)],
         }));
@@ -192,7 +212,7 @@ export function Project() {
           name: "Nova Fase",
           weeks: 2,
           isIndependent: false,
-          startDate: new Date().toString(),
+          startDate: new Date(),
           independentDate: new Date(),
           phaseOrder: currentVersion.phases.length + 1,
           phaseType: phaseType,
@@ -225,17 +245,25 @@ export function Project() {
     let projectId = project.id;
     project.cod = data.cod;
     if (!project.id && !id) {
-      const responseCreateProject = await createProject(project);
-      projectId = responseCreateProject.id;
-      toast.success("Projeto criado com sucesso")
+      try {
+        const responseCreateProject = await createProject(project);
+        projectId = responseCreateProject.id;
+        toast.success("Projeto criado com sucesso");
+      } catch {
+        toast.error("Erro ao criar projeto, tente novamente!");
+      }
     } else {
-      const responseUpdateProject = await updateProjectApi(project);
-      projectId = responseUpdateProject.id;
-      toast.success("Projeto atualizado com sucesso")
+      try {
+        const responseUpdateProject = await updateProjectApi(project);
+        projectId = responseUpdateProject.id;
+        toast.success("Projeto atualizado com sucesso");
+      } catch {
+        toast.error("Erro ao atualizar projeto, tente novamente!");
+      }
     }
 
     if (currentVersion) {
-      const versionData = {
+      const versionData: ProjectVersion = {
         ...currentVersion,
         projectId: projectId,
         version: id
@@ -247,8 +275,11 @@ export function Project() {
         state: data.state,
         title: data.title,
         cep: data.cep,
-
+        startDate: data.startDate,
+        code: data.cod,
       };
+
+      console.log(versionData)
 
       const responseCreateVersion = await createVersion(versionData);
 
@@ -286,7 +317,7 @@ export function Project() {
     phaseIndex: number,
     phases: ProjectPhase[]
   ): string => {
-    let startDate = new Date(currentVersion!.startDate);
+    const startDate = new Date(currentVersion!.startDate);
     for (let i = 0; i < phaseIndex; i++) {
       startDate.setDate(startDate.getDate() + phases[i].weeks * 7);
     }
@@ -370,46 +401,47 @@ export function Project() {
               <Input
                 {...register("title")}
                 placeholder="Nome"
-                className="bg-transparent focus:border-none col-span-3"
+                className="bg-transparent focus:border-none col-span-3 placeholder:font-bold "
               />
               <Input
                 {...register("cod")}
                 placeholder="Código"
-                className="bg-transparent focus:border-none col-span-2"
+                className="bg-transparent focus:border-none col-span-2 placeholder:font-bold"
               />
               <Input
                 {...register("cep")}
                 placeholder="Cep"
-                className="bg-transparent focus:border-none col-span-2"
+                className="bg-transparent focus:border-none col-span-2 placeholder:font-bold"
               />
 
               <Input
                 disabled
                 {...register("address")}
                 placeholder="Rua"
-                className="col-span-3"
+                className="col-span-3 placeholder:font-bold placeholder:text-black"
               />
               <Input
                 disabled
                 {...register("district")}
                 placeholder="Bairro"
-                className="col-span-1"
+                className="col-span-1  placeholder:font-bold placeholder:text-black"
               />
               <Input
                 disabled
                 {...register("city")}
                 placeholder="Cidade"
-                className="col-span-2"
+                className="col-span-2 placeholder:font-bold placeholder:text-black"
               />
               <Input
                 disabled
                 {...register("state")}
                 placeholder="UF"
-                className="border-none col-span-1"
+                className="border-none col-span-1 placeholder:font-bold placeholder:text-black"
               />
 
               <Input
-                className="bg-transparent"
+                title="Data de Inicio"
+                className="bg-transparent placeholder:font-bold "
                 {...register("startDate")}
                 placeholder="Data"
                 id="start-date"
@@ -445,7 +477,7 @@ export function Project() {
 
         <TimelineSection
           phases={projectPhases}
-          onUpdate={(updatedPhases: any) =>
+          onUpdate={(updatedPhases) =>
             handleUpdate({
               phases: [...updatedPhases, ...(constructionPhases ?? [])],
             })
@@ -487,7 +519,7 @@ export function Project() {
 
         <TimelineSection
           phases={constructionPhases}
-          onUpdate={(updatedPhases: any) =>
+          onUpdate={(updatedPhases) =>
             handleUpdate({
               phases: [...(projectPhases ?? []), ...updatedPhases],
             })

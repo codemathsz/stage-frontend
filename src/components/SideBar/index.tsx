@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
-import { CaretRight, Kanban, House } from "phosphor-react";
+import { CaretRight, Kanban } from "phosphor-react";
 import { Link, useLocation } from "react-router-dom";
 import clsx from "clsx";
 import { useMemo } from "react";
@@ -19,8 +19,7 @@ export function SideBar({ isOpenSidebar, handleOpenAndCloseSidebar }: SideBarPro
   const items = useMemo(
     () => [
       { title: "Projects", icon: <Kanban size={20} />, link: "/projects" },
-      { title: "Home", icon: <House size={20} />, link: "/home" },
-      { title: "Meetings", icon: <Kanban size={20} />, link: "/meetings" },
+      
     ],
     []
   );

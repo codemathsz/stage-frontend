@@ -76,7 +76,7 @@ export function ExportButtons({ projectVersion }: ExportButtonsProps) {
 
   return (
     <div className="fixed bottom-4 right-4 flex gap-2">
-      <Button onClick={handleExportCSV} disabled={isExporting} className="flex items-center gap-2">
+      <Button onClick={handleExportCSV} disabled={isExporting} className="flex items-center gap-2 text-white">
         <FileSpreadsheet size={20} />
         Exportar CSV
       </Button>

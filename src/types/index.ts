@@ -16,6 +16,7 @@ export interface Project {
 export interface ProjectVersion {
   id: string;
   projectId: string;
+  code: string;
   version: string;
   title: string;
   address: string;
@@ -35,7 +36,7 @@ export interface ProjectPhase {
   name: string;
   weeks: number;
   isIndependent: boolean;
-  startDate: string;
+  startDate: Date;
   independentDate: Date;
   phaseOrder: number;
   phaseType: PhaseType;
