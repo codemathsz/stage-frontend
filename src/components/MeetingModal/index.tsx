@@ -19,12 +19,13 @@ import { getAgendas } from "@/api/meet-api/get-agendas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createMeeting } from "@/api/meet-api/create-meeting";
 import { useEffect, useRef, useState } from "react";
-import { MeetType, User } from "@/types";
+import { MeetType, Milestone, User } from "@/types";
 import { Command, CommandInput, CommandItem, CommandList } from "../ui/command";
 import {
   updateMeetingApi,
   UpdateMeetingParams,
 } from "@/api/meet-api/update-meeting";
+import { createMilestone } from "@/api/milestone-api";
 
 interface MeetingModalProps {
   isOpen?: boolean;
@@ -167,6 +168,10 @@ export function MeetingModal({
       updateMeetingApi({ meet, id }),
   });
 
+  const { mutateAsync: createMilestoneFn } = useMutation({
+    mutationFn: (milestone: Milestone) => createMilestone(milestone),
+  });
+
   function handleAddPautas() {
     const agendaName = watch("meetingAgendaName");
     const agendaTypeId = watch("meetingAgendaTypeId");
@@ -239,23 +244,26 @@ export function MeetingModal({
 
   async function handleCreateAndUpdateMeeting(data: NewMeetingFormType) {
     if (updateMeetingData) {
-      const updateData = {
-        title: data.title,
-        meetObjectiveId: data.meetingType,
-        meetDate: data.meetingDate,
-        meetTimeStart: data.meetingHourStart,
-        meetTimeFinish: data.meetingHourFinish,
-        moderator: data.moderator,
-        participants: selectedParticipants.map((p) => p.id),
-        agendas: selectedPautasUpdate.map((pautasUpdate) => ({
-          id: pautasUpdate.id,
-          name: pautasUpdate.name,
-          agendaTypeId: pautasUpdate.agendaTypeId,
-        })),
-        projectPhaseId: projectPhaseId,
-      };
       try {
-        await updateMeetingFn({ meet: updateData, id: updateMeetingData.id });
+        await updateMeetingFn({
+          meet: {
+            title: data.title,
+            meetObjectiveId: data.meetingType,
+            meetDate: data.meetingDate,
+            meetTimeStart: data.meetingHourStart,
+            meetTimeFinish: data.meetingHourFinish,
+            moderator: data.moderator,
+            participants: selectedParticipants.map((p) => p.id),
+            agendas: selectedPautasUpdate.map((pautasUpdate) => ({
+              id: pautasUpdate.id,
+              name: pautasUpdate.name,
+              agendaTypeId: pautasUpdate.agendaTypeId,
+            })),
+            projectPhaseId: projectPhaseId,
+          },
+          id: updateMeetingData.id,
+        });
+
         queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
         toast.success("Reunião atualizada com sucesso!");
         onClose();
@@ -263,20 +271,24 @@ export function MeetingModal({
         toast.error("Ocorreu um erro ao atualizar, tente novamente.");
       }
     } else {
-      const meetData: NewMeetProps = {
-        title: data.title,
-        meetObjectiveId: data.meetingType,
-        meetDate: data.meetingDate,
-        meetTimeStart: data.meetingHourStart,
-        meetTimeFinish: data.meetingHourFinish,
-        moderator: data.moderator,
-        participants: selectedParticipants.map((p) => p.id),
-        agendas: selectedPautasAdd,
-        projectPhaseId: projectPhaseId,
-      };
-
       try {
-        await createMeetingFn(meetData);
+        await createMeetingFn({
+          title: data.title,
+          meetObjectiveId: data.meetingType,
+          meetDate: data.meetingDate,
+          meetTimeStart: data.meetingHourStart,
+          meetTimeFinish: data.meetingHourFinish,
+          moderator: data.moderator,
+          participants: selectedParticipants.map((p) => p.id),
+          agendas: selectedPautasAdd,
+          projectPhaseId: projectPhaseId,
+        });
+        await createMilestoneFn({
+          name: data.title,
+          projectPhaseId: projectPhaseId,
+          date: new Date(data.meetingDate),
+          id: updateMeetingData?.id,
+        });
         queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
         toast.success("Reunião criada com sucesso!");
         onClose();

@@ -156,14 +156,14 @@ export function Project() {
 
   useEffect(() => {
     if (currentVersion) {
-      console.log(currentVersion)
+      console.log(currentVersion);
       setValue("title", currentVersion.title);
       setValue("address", currentVersion.address);
       setValue("cep", currentVersion.cep);
       setValue("city", currentVersion.city);
       setValue("state", currentVersion.state);
       setValue("startDate", currentVersion.startDate);
-      setValue("cod", currentVersion.code);
+      setValue("cod", project?.cod || "");
     }
   }, [currentVersion, setValue, projects]);
 
@@ -276,10 +276,7 @@ export function Project() {
         title: data.title,
         cep: data.cep,
         startDate: data.startDate,
-        code: data.cod,
       };
-
-      console.log(versionData)
 
       const responseCreateVersion = await createVersion(versionData);
 
@@ -476,6 +473,7 @@ export function Project() {
         </div>
 
         <TimelineSection
+          idProject={project.id}
           phases={projectPhases}
           onUpdate={(updatedPhases) =>
             handleUpdate({
@@ -484,7 +482,7 @@ export function Project() {
           }
           onDeletePhase={deletePhase}
           totalWeeks={totalProjectWeeks}
-          projectStartDate={currentVersion.startDate.toString()}
+          projectStartDate={new Date(currentVersion.startDate.toString())}
         />
 
         <div className="mt-12 mb-8 border-b pb-4">

@@ -2,24 +2,39 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, X, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Trash2,
+  CircleArrowDown,
+  Save,
+} from "lucide-react";
 import { Milestone, ProjectPhase } from "@/types";
-import { formatDate, formatDateISO } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { Label } from "./ui/label";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { createMilestone } from "@/api/milestone-api";
+import { toast } from "sonner";
 
 interface TimelineSectionProps {
   phases: ProjectPhase[];
   totalWeeks: number;
   onUpdate: (updatedPhases: ProjectPhase[]) => void;
-  projectStartDate: string;
+  projectStartDate: Date;
   onDeletePhase: (id: string) => void;
+  idProject: string;
 }
 
-interface MarcoAddProps {
-  id: string;
-  name?: string;
-  date?: Date;
-  projectPhaseId?: string;
-}
+const marcoProps = z.object({
+  name: z.string().min(1, "O nome é obrigatório"),
+  date: z.string().min(1, "A data é obrigatória"),
+  /* phaseId: z.string().min(1, "A fase é obrigatória"), */
+});
+
+type NewMarco = z.infer<typeof marcoProps>;
 
 export function TimelineSection({
   phases,
@@ -27,11 +42,12 @@ export function TimelineSection({
   onUpdate,
   projectStartDate,
   onDeletePhase,
+  idProject,
 }: TimelineSectionProps) {
- /*  const [editingPhase, setEditingPhase] = useState<string | null>(null); */
+  const [editingPhase, setEditingPhase] = useState<string | null>(null);
 
   const calculatePhaseStartDate = (phaseIndex: number): string => {
-    let startDate = new Date(projectStartDate);
+    const startDate = new Date(projectStartDate);
     for (let i = 0; i < phaseIndex; i++) {
       startDate.setDate(startDate.getDate() + phases[i].weeks * 7);
     }
@@ -52,10 +68,18 @@ export function TimelineSection({
     onUpdate(updatedPhases);
   };
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<NewMarco>({
+    resolver: zodResolver(marcoProps),
+  });
+
   const handleIndependentChange = (
     id: string,
     isIndependent: boolean,
-    startDate: Date
+    startDate?: string
   ) => {
     const updatedPhases = phases.map((phase) =>
       phase.id === id
@@ -64,16 +88,15 @@ export function TimelineSection({
             isIndependent,
             startDate: isIndependent
               ? startDate || projectStartDate
-              : new Date(),
+              : new Date().toString(),
           }
         : phase
     );
-    console.log(updatedPhases)
     onUpdate(updatedPhases);
   };
 
-  const handleStartDateChange = (id: string, startDate: Date) => {
-    if (!validateDate(String(startDate), projectStartDate)) {
+  const handleStartDateChange = (id: string, startDate: string) => {
+    if (!validateDate(startDate, projectStartDate)) {
       alert("A data deve ser posterior à data de início do projeto");
       return;
     }
@@ -83,37 +106,34 @@ export function TimelineSection({
     onUpdate(updatedPhases);
   };
 
-  const handleAddMilestone = ({
-    projectPhaseId,
-    name,
-    id,
-    date,
-  }: MarcoAddProps) => {
+  console.log(errors);
+
+  /*   const handleAddMilestone = (phaseId: string) => {
     const updatedPhases = phases.map((phase, index) => {
-      if (phase.id === projectPhaseId) {
+      if (phase.id === phaseId) {
         const phaseStartDate =
           phase.isIndependent && phase.startDate
             ? new Date(phase.startDate)
             : new Date(calculatePhaseStartDate(index));
 
         const newMilestoneDate = new Date(phaseStartDate);
-        newMilestoneDate.setDate(newMilestoneDate.getDate() + 1);
+        newMilestoneDate.setDate(newMilestoneDate.getDate() + 1); // Set to next day
 
         const newMilestone: Milestone = {
-          id: id,
-          name: name,
-          date: date,
+          id: "",
+          name: "Novo Marco",
+
+          date: newMilestoneDate,
           projectPhaseId: phase.id,
         };
         return { ...phase, milestones: [...phase.milestones, newMilestone] };
       }
       return phase;
     });
-    console.log(updatedPhases);
     onUpdate(updatedPhases);
   };
-
-  const handleUpdateMilestone = (
+ */
+  /*   const handleUpdateMilestone = (
     phaseId: string,
     milestoneId: string,
     updatedMilestone: Partial<Milestone>
@@ -158,7 +178,7 @@ export function TimelineSection({
       return phase;
     });
     onUpdate(updatedPhases);
-  };
+  }; */
 
   const handleMovePhase = (index: number, direction: "up" | "down") => {
     const newPhases = [...phases];
@@ -180,6 +200,16 @@ export function TimelineSection({
     if (window.confirm("Tem certeza que deseja excluir esta fase?")) {
       onDeletePhase(id);
     }
+  };
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const { mutateAsync: createMilestoneFn } = useMutation({
+    mutationFn: (milestone: Milestone) => createMilestone(milestone),
+  });
+
+  const onSubmit = (data: NewMarco) => {
+    console.log("Dados enviados:", data);
   };
 
   return (
@@ -219,8 +249,8 @@ export function TimelineSection({
                     handleWeekChange(phase.id, parseInt(e.target.value) || 0)
                   }
                   className="w-20 p-1"
-                 /*  onFocus={() => setEditingPhase(phase.id)}
-                  onBlur={() => setEditingPhase(null)} */
+                  onFocus={() => setEditingPhase(phase.id)}
+                  onBlur={() => setEditingPhase(null)}
                 />
                 <span className="text-sm text-gray-600">semanas</span>
               </div>
@@ -236,7 +266,6 @@ export function TimelineSection({
               <div className="flex items-center gap-2">
                 <span className="text-sm">Independente</span>
                 <Switch
-                className="text-blue-500"
                   checked={phase.isIndependent}
                   onCheckedChange={(checked) =>
                     handleIndependentChange(phase.id, checked)
@@ -282,49 +311,49 @@ export function TimelineSection({
                 </Button>
               </div>
             </div>
-            <div className="ml-64 space-y-2">
-              {phase.milestones.map((milestone) => (
-                <div key={milestone.id} className="flex items-center gap-2">
-                  <Input
-                    value={milestone.name}
-                    placeholder="Novo Marco"
-                    onChange={(e) =>
-                      handleUpdateMilestone(phase.id, milestone.id, {
-                        name: e.target.value,
-                      })
-                    }
-                    className="w-48"
-                  />
-                  <Input
-                    type="date"
-                    value={milestone.date.toString()}
-                    onChange={(e) =>
-                      handleUpdateMilestone(phase.id, milestone.id, {
-                        date: new Date(e.target.value),
-                      })
-                    }
-                    className="w-40"
-                    min={String(phase.startDate) || projectStartDate}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      handleRemoveMilestone(phase.id, milestone.id)
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleAddMilestone(phase.id)}
-              >
-                <Plus className="mr-2 h-4 w-4" /> Adicionar Marco
-              </Button>
-            </div>
+            <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="cursor-pointer gap-2 px-4 py-2 text-white rounded bg-gray-300"
+      >
+        <div className="flex gap-2">
+          <CircleArrowDown className="text-black" />
+          <p className="text-black font-medium">Marco</p>
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="mt-5 bg-gray-100 p-4 rounded">
+          <form
+            className="flex flex-col gap-3"
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <Label>Nome do marco</Label>
+            <Input
+              {...register("name")}
+              placeholder="Ex: reunião com o cliente"
+            />
+            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+
+            <Label>Data do marco</Label>
+            <Input
+              {...register("date")}
+              min={new Date().toISOString().split("T")[0]}
+              type="date"
+            />
+            {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
+
+            <Button
+              type="submit"
+              className="text-white w-40 mt-2 bg-black flex gap-2"
+            >
+              <Save /> Adicionar marco
+            </Button>
+          </form>
+        </div>
+      )}
+    </div>
           </div>
         ))}
       </div>

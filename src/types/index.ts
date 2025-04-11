@@ -16,7 +16,6 @@ export interface Project {
 export interface ProjectVersion {
   id: string;
   projectId: string;
-  code: string;
   version: string;
   title: string;
   address: string;
