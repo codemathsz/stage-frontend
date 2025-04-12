@@ -32,6 +32,7 @@ interface MeetingModalProps {
   onClose: () => void;
   projectPhaseId: string;
   updateMeetingData?: MeetType;
+  action: "create" | "update";
 }
 
 const newMeeting = z.object({
@@ -97,6 +98,7 @@ export function MeetingModal({
   onClose,
   projectPhaseId,
   updateMeetingData,
+  action,
   isOpen,
 }: MeetingModalProps) {
   const [focus, setFocus] = useState(false);
@@ -243,7 +245,7 @@ export function MeetingModal({
   }
 
   async function handleCreateAndUpdateMeeting(data: NewMeetingFormType) {
-    if (updateMeetingData) {
+    if (action === "update") {
       try {
         await updateMeetingFn({
           meet: {
@@ -261,7 +263,7 @@ export function MeetingModal({
             })),
             projectPhaseId: projectPhaseId,
           },
-          id: updateMeetingData.id,
+          id: updateMeetingData?.id ?? "",
         });
 
         queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
@@ -283,11 +285,12 @@ export function MeetingModal({
           agendas: selectedPautasAdd,
           projectPhaseId: projectPhaseId,
         });
+
         await createMilestoneFn({
           name: data.title,
           projectPhaseId: projectPhaseId,
           date: new Date(data.meetingDate),
-          id: updateMeetingData?.id,
+          id: updateMeetingData?.id ?? "",
         });
         queryClient.invalidateQueries({ queryKey: ["get-phase-by-id"] });
         toast.success("Reunião criada com sucesso!");

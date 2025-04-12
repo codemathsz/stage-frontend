@@ -8,6 +8,9 @@ import {
   Trash2,
   CircleArrowDown,
   Save,
+  CircleArrowUp,
+  CalendarCheck2,
+  FolderOpen,
 } from "lucide-react";
 import { Milestone, ProjectPhase } from "@/types";
 import { formatDate } from "@/lib/utils";
@@ -23,15 +26,15 @@ interface TimelineSectionProps {
   phases: ProjectPhase[];
   totalWeeks: number;
   onUpdate: (updatedPhases: ProjectPhase[]) => void;
-  projectStartDate: Date;
+  projectStartDate: string;
   onDeletePhase: (id: string) => void;
-  idProject: string;
+  idProject?: string;
 }
 
 const marcoProps = z.object({
   name: z.string().min(1, "O nome é obrigatório"),
   date: z.string().min(1, "A data é obrigatória"),
-  /* phaseId: z.string().min(1, "A fase é obrigatória"), */
+  phaseId: z.string().min(1, "A fase é obrigatória"),
 });
 
 type NewMarco = z.infer<typeof marcoProps>;
@@ -44,8 +47,6 @@ export function TimelineSection({
   onDeletePhase,
   idProject,
 }: TimelineSectionProps) {
-  const [editingPhase, setEditingPhase] = useState<string | null>(null);
-
   const calculatePhaseStartDate = (phaseIndex: number): string => {
     const startDate = new Date(projectStartDate);
     for (let i = 0; i < phaseIndex; i++) {
@@ -108,78 +109,6 @@ export function TimelineSection({
 
   console.log(errors);
 
-  /*   const handleAddMilestone = (phaseId: string) => {
-    const updatedPhases = phases.map((phase, index) => {
-      if (phase.id === phaseId) {
-        const phaseStartDate =
-          phase.isIndependent && phase.startDate
-            ? new Date(phase.startDate)
-            : new Date(calculatePhaseStartDate(index));
-
-        const newMilestoneDate = new Date(phaseStartDate);
-        newMilestoneDate.setDate(newMilestoneDate.getDate() + 1); // Set to next day
-
-        const newMilestone: Milestone = {
-          id: "",
-          name: "Novo Marco",
-
-          date: newMilestoneDate,
-          projectPhaseId: phase.id,
-        };
-        return { ...phase, milestones: [...phase.milestones, newMilestone] };
-      }
-      return phase;
-    });
-    onUpdate(updatedPhases);
-  };
- */
-  /*   const handleUpdateMilestone = (
-    phaseId: string,
-    milestoneId: string,
-    updatedMilestone: Partial<Milestone>
-  ) => {
-    const updatedPhases = phases.map((phase, phaseIndex) => {
-      if (phase.id === phaseId) {
-        const phaseStartDate =
-          phase.isIndependent && formatDateISO(String(phase.startDate))
-            ? new Date(phase.startDate)
-            : new Date(calculatePhaseStartDate(phaseIndex));
-
-        const updatedMilestones = phase.milestones.map((milestone) => {
-          if (milestone.id === milestoneId) {
-            if (updatedMilestone.date) {
-              if (updatedMilestone.date < phaseStartDate) {
-                alert(
-                  "A data do marco deve ser posterior à data de início da fase"
-                );
-                return milestone;
-              }
-              milestone.date = updatedMilestone.date;
-            }
-            return (milestone = { ...milestone, ...updatedMilestone });
-          }
-          return milestone;
-        });
-        return { ...phase, milestones: updatedMilestones };
-      }
-      return phase;
-    });
-    onUpdate(updatedPhases);
-  };
-
-  const handleRemoveMilestone = (phaseId: string, milestoneId: string) => {
-    const updatedPhases = phases.map((phase) => {
-      if (phase.id === phaseId) {
-        const updatedMilestones = phase.milestones.filter(
-          (milestone) => milestone.id !== milestoneId
-        );
-        return { ...phase, milestones: updatedMilestones };
-      }
-      return phase;
-    });
-    onUpdate(updatedPhases);
-  }; */
-
   const handleMovePhase = (index: number, direction: "up" | "down") => {
     const newPhases = [...phases];
     if (direction === "up" && index > 0) {
@@ -202,15 +131,26 @@ export function TimelineSection({
     }
   };
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [openFormPhaseId, setOpenFormPhaseId] = useState<string | null>(null);
 
   const { mutateAsync: createMilestoneFn } = useMutation({
     mutationFn: (milestone: Milestone) => createMilestone(milestone),
   });
 
-  const onSubmit = (data: NewMarco) => {
-    console.log("Dados enviados:", data);
-  };
+  async function handleAddMilestone(data: NewMarco) {
+    try {
+      await createMilestoneFn({
+        date: new Date(data.date),
+        name: data.name,
+        projectPhaseId: data.phaseId,
+        id: idProject ?? "",
+      });
+      toast.success("Marco criado com sucesso.");
+      setOpenFormPhaseId(null);
+    } catch {
+      toast.error("Houve um erro ao tentar criar, tente novamente.");
+    }
+  }  
 
   return (
     <div className="mb-8">
@@ -249,8 +189,6 @@ export function TimelineSection({
                     handleWeekChange(phase.id, parseInt(e.target.value) || 0)
                   }
                   className="w-20 p-1"
-                  onFocus={() => setEditingPhase(phase.id)}
-                  onBlur={() => setEditingPhase(null)}
                 />
                 <span className="text-sm text-gray-600">semanas</span>
               </div>
@@ -312,48 +250,94 @@ export function TimelineSection({
               </div>
             </div>
             <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer gap-2 px-4 py-2 text-white rounded bg-gray-300"
-      >
-        <div className="flex gap-2">
-          <CircleArrowDown className="text-black" />
-          <p className="text-black font-medium">Marco</p>
-        </div>
-      </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setOpenFormPhaseId(
+                    openFormPhaseId === phase.id ? null : phase.id
+                  )
+                }
+                className="cursor-pointer gap-2 px-4 py-2 text-white rounded bg-gray-300"
+              >
+                <div className="flex gap-2">
+                  {openFormPhaseId === phase.id ? (
+                    <CircleArrowUp className="text-black" />
+                  ) : (
+                    <CircleArrowDown className="text-black" />
+                  )}
 
-      {isOpen && (
-        <div className="mt-5 bg-gray-100 p-4 rounded">
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <Label>Nome do marco</Label>
-            <Input
-              {...register("name")}
-              placeholder="Ex: reunião com o cliente"
-            />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+                  <p className="text-black font-medium">Adicionar marco</p>
+                </div>
+              </button>
 
-            <Label>Data do marco</Label>
-            <Input
-              {...register("date")}
-              min={new Date().toISOString().split("T")[0]}
-              type="date"
-            />
-            {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
+              {openFormPhaseId === phase.id && (
+                <div key={phase.id} className="mt-5 bg-gray-100 p-4 rounded">
+                  <form
+                    className="flex flex-col gap-3"
+                    onSubmit={handleSubmit(handleAddMilestone)}
+                  >
+                    <input
+                      {...register("phaseId")}
+                      type="hidden"
+                      value={phase.id}
+                    />
+                    <Label>Nome do marco</Label>
+                    <Input
+                      {...register("name")}
+                      placeholder="Ex: reunião com o cliente"
+                    />
+                    {errors.name && (
+                      <p className="text-red-500 text-sm">
+                        {errors.name.message}
+                      </p>
+                    )}
 
-            <Button
-              type="submit"
-              className="text-white w-40 mt-2 bg-black flex gap-2"
-            >
-              <Save /> Adicionar marco
-            </Button>
-          </form>
-        </div>
-      )}
-    </div>
+                    <Label>Data do marco</Label>
+                    <Input
+                      {...register("date")}
+                      min={new Date().toISOString().split("T")[0]}
+                      type="date"
+                    />
+                    {errors.date && (
+                      <p className="text-red-500 text-sm">
+                        {errors.date.message}
+                      </p>
+                    )}
+
+                    <Button
+                      type="submit"
+                      className="text-white w-40 mt-2 bg-black flex gap-2"
+                    >
+                      <Save /> Adicionar marco
+                    </Button>
+                  </form>
+                </div>
+              )}
+            </div>
+
+            {phase.milestones.length > 0 && (
+              <h1 className="font-bold">Marcos Adicionados:</h1>
+            )}
+
+            {phase.milestones &&
+              phase.milestones.map((milestone) => (
+                <div className="w-full flex">
+                  <div className="bg-gray-200 p-2 w-fit min-w-52 rounded-sm">
+                    <p className="flex items-center gap-1 font-medium text-sm">
+                      <FolderOpen className="w-5 h-5 text-blue-500" />{" "}
+                      {milestone.name}
+                    </p>
+
+                    <p
+                      title="Data do marco"
+                      className="flex items-center gap-1 font-medium text-sm"
+                    >
+                      <CalendarCheck2 className="w-5 h-5 text-blue-500" />
+                      {formatDate(String(milestone.date))}
+                    </p>
+                  </div>
+                </div>
+              ))}
           </div>
         ))}
       </div>

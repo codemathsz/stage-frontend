@@ -51,6 +51,7 @@ export function PhaseMeetingComponent({ projectPhase }: PhaseMeetingProps) {
 
       {openModal && (
         <MeetingModal
+          action="create"
           projectPhaseId={projectPhase.id}
           onClose={() => handleOpenModal()}
         />

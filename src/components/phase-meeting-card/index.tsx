@@ -40,8 +40,9 @@ export function PhaseMeetingCard({ meeting }: PhaseMeetingCardProps) {
           </button>
         </div>
       </div>
-      {openModal && (
+      {openModal && meeting && (
         <MeetingModal
+          action="update"
           isOpen={openModal}
           updateMeetingData={meeting}
           projectPhaseId={meeting.projectPhaseId}

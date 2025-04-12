@@ -37,7 +37,7 @@ export function Meet() {
 
   useEffect(() => {
     if (project) {
-      let latest = getlatestVersionProject(project.versions);
+      const latest = getlatestVersionProject(project.versions);
       setLatestVersion(latest);
     }
   }, [project]);

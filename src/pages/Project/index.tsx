@@ -75,6 +75,7 @@ export function Project() {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<NewProjectFormType>({
     resolver: zodResolver(newProject),
@@ -117,7 +118,7 @@ export function Project() {
             setValue("city", data.localidade || "");
             setValue("state", data.uf || "");
           } else {
-            alert("CEP não encontrado.");
+            toast.warning("CEP não encontrado.");
           }
         })
         .catch((error) => {
@@ -212,7 +213,7 @@ export function Project() {
           name: "Nova Fase",
           weeks: 2,
           isIndependent: false,
-          startDate: new Date(),
+          startDate: String(new Date()),
           independentDate: new Date(),
           phaseOrder: currentVersion.phases.length + 1,
           phaseType: phaseType,
@@ -249,6 +250,7 @@ export function Project() {
         const responseCreateProject = await createProject(project);
         projectId = responseCreateProject.id;
         toast.success("Projeto criado com sucesso");
+        reset();
       } catch {
         toast.error("Erro ao criar projeto, tente novamente!");
       }
@@ -482,7 +484,7 @@ export function Project() {
           }
           onDeletePhase={deletePhase}
           totalWeeks={totalProjectWeeks}
-          projectStartDate={new Date(currentVersion.startDate.toString())}
+          projectStartDate={new Date(currentVersion.startDate).toISOString()}
         />
 
         <div className="mt-12 mb-8 border-b pb-4">
