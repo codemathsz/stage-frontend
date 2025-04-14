@@ -318,10 +318,10 @@ export function Project() {
   ): string => {
     const startDate = new Date(currentVersion!.startDate);
     for (let i = 0; i < phaseIndex; i++) {
-      startDate.setDate(startDate.getDate() + phases[i].weeks * 7);
+      startDate.setDate(startDate.getDate() + phases[i]?.weeks * 7);
     }
-    startDate.setDate(startDate.getDate() + phases[phaseIndex].weeks * 7);
-    return startDate.toISOString().split("T")[0];
+    startDate.setDate(startDate.getDate() + phases[phaseIndex]?.weeks * 7);
+    return startDate?.toISOString()?.split("T")[0];
   };
 
   const projectPhases = currentVersion?.phases?.filter(

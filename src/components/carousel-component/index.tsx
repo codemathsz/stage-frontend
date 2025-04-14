@@ -5,13 +5,11 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from "@/components/ui/carousel"
 import { Photo1, Photo2, Photo3, Photo4, Photo5 } from "@/assets/carousel"
 import Autoplay from "embla-carousel-autoplay"
 
 export function CarouselComponent() {
-  const [api, setApi] = React.useState<CarouselApi>()
   const photos = [
     {name: 'photo 1', url: Photo1},
     {name: 'photo 2', url: Photo2},

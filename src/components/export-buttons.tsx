@@ -31,7 +31,7 @@ export function ExportButtons({ projectVersion }: ExportButtonsProps) {
           const row = [
             phase.name,
             phase.weeks,
-            startDate.toISOString().split("T")[0],
+            startDate.toString().split("T")[0],
             endDate.toISOString().split("T")[0],
             phase.isIndependent ? "Sim" : "Não",
             phase.milestones.map((m) => `${m.name}: ${m.date.toISOString().split("T")[0]}`).join("; "),
@@ -49,7 +49,7 @@ export function ExportButtons({ projectVersion }: ExportButtonsProps) {
           const row = [
             phase.name,
             phase.weeks,
-            startDate.toISOString().split("T")[0],
+            startDate.toString().split("T")[0],
             endDate.toISOString().split("T")[0],
             phase.isIndependent ? "Sim" : "Não",
             phase.milestones.map((m) => `${m.name}: ${m.date.toISOString().split("T")[0]}`).join("; "),
