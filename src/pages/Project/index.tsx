@@ -37,6 +37,7 @@ interface IVersion {
   id: string;
   version: string;
 }
+import { format } from "date-fns";
 
 const newProject = z.object({
   title: z.string().min(1, "Informe o nome do projeto"),
@@ -46,13 +47,7 @@ const newProject = z.object({
   city: z.string().min(1, "Informe a cidade"),
   state: z.string().min(1, "Informe a UF"),
   cod: z.string().min(4, "Informe o codigo"),
-  startDate: z
-    .string()
-    .min(1, "Informe a data de início")
-    .transform((value) => new Date(value)) // transforma string em Date
-    .refine((date) => !isNaN(date.getTime()), {
-      message: "Data inválida",
-    }),
+  startDate: z.string().min(1, "Informe a data de inicio do projeto"),
 });
 
 type NewProjectFormType = z.infer<typeof newProject>;
@@ -139,6 +134,10 @@ export function Project() {
     setSelectedVersion(latestVersion);
     setVersions(handleSetVersion(project.versions));
   };
+
+  console.log(errors);
+
+  console.log(new Date());
 
   useEffect(() => {
     const getProject = async () => {
@@ -242,6 +241,7 @@ export function Project() {
   );
 
   const handleCreateAndUpdateProject = async (data: NewProjectFormType) => {
+    console.log(project);
     if (!project) return;
     let projectId = project.id;
     project.cod = data.cod;
@@ -286,8 +286,11 @@ export function Project() {
         for (const phase of currentVersion.phases) {
           const currentPhase = {
             ...phase,
+            independentDate: format(phase.independentDate, "yyyy-MM-dd"),
+            startDate:format(phase.startDate, "yyyy-MM-dd"),
             projectVersionId: responseCreateVersion.id,
           };
+
           const responseCreatePhase = await createPhase(currentPhase);
 
           if (currentPhase.milestones) {

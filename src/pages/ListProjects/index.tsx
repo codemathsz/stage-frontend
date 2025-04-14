@@ -53,7 +53,7 @@ export function ListProjects() {
 
   return (
     <div className="px-4">
-      <div className="bg-white flex justify-between items-center px-6 mt-8 h-20 rounded-lg shadow-sm">
+      <div className="bg-white flex justify-between items-center px-6 mt-8 h-20 rounded-lg shadow-sm overflow-auto">
         <div className="relative w-full max-w-xl flex items-center gap-4">
           <Input
             onChange={(event) => setQueryFilter(event.target.value)}
@@ -84,7 +84,7 @@ export function ListProjects() {
           Total:<p className="text-gray-400">{projects?.length}</p>
         </h1>
 
-        <Table className="mt-10">
+        <Table className="mt-10 ">
           <TableHeader>
             <TableRow className="font-bold">
               <TableHead className="font-bold">Nome</TableHead>
@@ -96,7 +96,8 @@ export function ListProjects() {
               </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+      
+          <TableBody >
             {filteredProjects && filteredProjects?.length > 0 || projects && projects?.length > 0 ? (
               (filteredProjects && filteredProjects?.length > 0
                 ? filteredProjects
@@ -153,6 +154,7 @@ export function ListProjects() {
               </TableRow>
             )}
           </TableBody>
+      
         </Table>
       </div>
     </div>

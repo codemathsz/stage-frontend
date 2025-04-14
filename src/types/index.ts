@@ -24,7 +24,7 @@ export interface ProjectVersion {
   city: string;
   state: string;
   updatedAt: Date;
-  startDate: Date;
+  startDate: string;
   constructionStartDate: Date;
   phases: ProjectPhase[];
 }
@@ -36,7 +36,7 @@ export interface ProjectPhase {
   weeks: number;
   isIndependent: boolean;
   startDate: string;
-  independentDate: Date;
+  independentDate: string;
   phaseOrder: number;
   phaseType: PhaseType;
   milestones: Milestone[];
